@@ -1,0 +1,3829 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>국궁 개인습사 기록관리 Pro (K-Archery Live)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Google Fonts: Pretendard & Noto Serif KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'sans-serif'],
+            serif: ['"Noto Serif KR"', 'serif'],
+          },
+          colors: {
+            archery: {
+              hit: '#059669',
+              hitBright: '#10B981',
+              missFront: '#F43F5E',
+              missBack: '#F59E0B',
+              missShort: '#0284C7',
+              missLong: '#8B5CF6',
+              brand: '#0D9488',
+              brandDark: '#115E59'
+            }
+          },
+          boxShadow: {
+            'glow-hit': '0 0 25px -2px rgba(16, 185, 129, 0.65)',
+            'clay': '0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 3px 8px -2px rgba(15, 23, 42, 0.04)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .hanji-paper {
+      background-color: #fdfbf7;
+      background-image: radial-gradient(#ebe3d5 0.8px, transparent 0.8px);
+      background-size: 16px 16px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #sijiPrintContainer, #sijiPrintContainer * {
+        visibility: visible !important;
+      }
+      #sijiPrintContainer {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    @keyframes pop-hit {
+      0% { transform: scale(0.92); opacity: 0.8; }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop-hit {
+      animation: pop-hit 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-white pb-14">
+
+  <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-xs no-print">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- App Title and Brand -->
+        <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchTab('archers')">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-700 via-emerald-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 active:scale-95 transition">
+            <i data-lucide="target" class="w-5 h-5 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[10px] sm:text-xs font-black tracking-wider text-teal-700 uppercase bg-teal-50 px-1.5 py-0.5 rounded-md">K-Archery Live Pro</span>
+              <span class="px-1.5 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-black rounded-md">0단부터 공식지원</span>
+            </div>
+            <h1 class="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight flex items-center gap-1.5">
+              국궁 개인습사 기록관리
+              <span class="text-emerald-500 text-xs sm:text-sm font-black">● LIVE</span>
+            </h1>
+          </div>
+        </div>
+
+        <!-- Current Archer Badge & Rapid Registration Trigger -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300 rounded-2xl px-2.5 sm:px-3 py-1.5 flex items-center space-x-2 shadow-2xs cursor-pointer hover:border-emerald-500 transition" onclick="switchTab('archers')">
+            <div id="navArcherAvatar" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
+              弓
+            </div>
+            <div class="text-left">
+              <div class="flex items-center space-x-1.5">
+                <span id="navArcherName" class="text-xs sm:text-sm font-black text-slate-900">이순신</span>
+                <span id="navArcherTargetDan" class="text-[9px] sm:text-[10px] font-black text-teal-800 bg-teal-200/90 px-1.5 py-0.2 rounded-full">3단 도전</span>
+              </div>
+              <p id="navArcherDetails" class="text-[9px] sm:text-[10px] font-bold text-slate-500 truncate max-w-[130px] sm:max-w-xs">[중궁] 개량궁 48# · 카본 6.5돈</p>
+            </div>
+          </div>
+
+          <button onclick="openManageArchersModal('new')" class="px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/20 flex items-center space-x-1 transition active:scale-95 shrink-0">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">+ 궁사 등록</span>
+            <span class="sm:hidden">등록</span>
+          </button>
+
+          <button id="soundToggleBtn" onclick="toggleAudio()" title="관중 효과음 ON/OFF" class="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-teal-600 transition shadow-2xs">
+            <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <nav class="flex space-x-1.5 overflow-x-auto py-2 border-t border-slate-100 no-scrollbar">
+        <button id="tabBtn-archers" onclick="switchTab('archers')" class="nav-tab active-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center space-x-1.5 whitespace-nowrap bg-teal-700 text-white shadow-xs">
+          <i data-lucide="user-check" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+          <span>1. 궁사 등록·선택</span>
+        </button>
+        <button id="tabBtn-shoot" onclick="switchTab('shoot')" class="nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+          <span>2. 사대 습사 (1~9순)</span>
+        </button>
+        <button id="tabBtn-advice" onclick="switchTab('advice')" class="nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+          <span>3. 기상 탄도 & 사법 조언</span>
+        </button>
+        <button id="tabBtn-siji" onclick="switchTab('siji')" class="nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+          <span>4. 전통 矢紙 (시지·메모)</span>
+        </button>
+        <button id="tabBtn-history" onclick="switchTab('history')" class="nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="history" class="w-3.5 h-3.5"></i>
+          <span>5. 습사 일지 보관함 (복기)</span>
+        </button>
+        <button id="tabBtn-analytics" onclick="switchTab('analytics')" class="nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+          <span>6. 향상도 & 결점분석</span>
+        </button>
+        <button id="tabBtn-jeonbuk" onclick="switchTab('jeonbuk')" class="nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+          <span>전북 20개 사정 명단</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+
+    <!-- ============================================================== -->
+    <!-- VIEW 1: 궁사 등록 및 장비 제원 선택 (ARCHERS & EQUIPMENT FIRST) -->
+    <!-- ============================================================== -->
+    <div id="viewArchers" class="space-y-5">
+      
+      <!-- Welcome & Quick Archer Setup Banner -->
+      <div class="bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-clay border border-teal-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2 mb-1.5">
+            <span class="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full uppercase tracking-wider">
+              1단계 시작
+            </span>
+            <span class="text-teal-300 text-xs font-bold">궁사 등록 · 활(20#~70#) · 화살(죽시/카본) · 0단 선택</span>
+          </div>
+          <h2 class="text-lg sm:text-xl font-black text-white">
+            사대에 출전할 궁사를 등록하거나 선택해 주십시오
+          </h2>
+          <p class="text-xs text-slate-300 font-bold mt-1 leading-relaxed">
+            <strong>0단(수련궁사)부터 9단(최고궁)</strong>까지 공인 급·단위를 지원하며, 등록된 활 크기(단·중·장궁), 세기(20#~70#), 화살(죽시·카본) 제원에 맞춰 다음 사대에서 개인별 탄도 사법 조언이 실시간 표출됩니다.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button onclick="openManageArchersModal('new')" class="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl text-xs sm:text-sm font-black shadow-lg shadow-amber-500/25 flex items-center space-x-2 transition active:scale-95">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            <span>+ 신규 궁사 등록 (0단~)</span>
+          </button>
+          <button onclick="switchTab('shoot')" class="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs sm:text-sm font-black border border-white/20 transition flex items-center space-x-1.5">
+            <span>사대 습사로 이동</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Currently Active Archer Dashboard Preview Card -->
+      <div class="bg-white rounded-3xl p-5 shadow-clay border-2 border-teal-500/60 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-teal-700 text-white flex items-center justify-center font-black text-base shadow-xs">
+              <i data-lucide="user-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="text-[11px] font-black text-teal-800 uppercase tracking-wider block">현재 사대 출전 궁사 확인</span>
+              <div class="flex items-center space-x-2">
+                <span id="activeArcherCardName" class="text-base sm:text-lg font-black text-slate-900">이순신</span>
+                <span id="activeArcherCardDan" class="px-2 py-0.5 rounded-full text-xs font-black bg-teal-100 text-teal-800">3단 (28중)</span>
+                <span id="activeArcherCardJeong" class="text-xs font-bold text-slate-500">· 진안 마이정</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="openArcherConfirmModal(currentArcherId)" class="px-3.5 py-2 bg-slate-100 hover:bg-teal-50 text-teal-900 border border-slate-200 rounded-xl text-xs font-black transition flex items-center space-x-1.5">
+              <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-teal-700"></i>
+              <span>공인 등록 확인증 보기</span>
+            </button>
+            <button onclick="openManageArchersModal('edit')" class="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black transition flex items-center space-x-1.5 shadow-xs">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              <span>제원 정보 수정</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-bold">
+          <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200/80">
+            <span class="text-slate-400 block text-[10px] font-black mb-0.5">활 크기 & 종류</span>
+            <span id="activeArcherBowSpec" class="font-black text-teal-950 text-sm">[중궁] 개량궁 48#</span>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200/80">
+            <span class="text-slate-400 block text-[10px] font-black mb-0.5">화살 재질 & 중량</span>
+            <span id="activeArcherArrowSpec" class="font-black text-amber-950 text-sm">카본시 6.5돈 (2자 6.0치)</span>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200/80">
+            <span class="text-slate-400 block text-[10px] font-black mb-0.5">목표 단위 & 합격선</span>
+            <span id="activeArcherGoalSpec" class="font-black text-rose-700 text-sm">3단 (28중/45시)</span>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200/80">
+            <span class="text-slate-400 block text-[10px] font-black mb-0.5">권장 사법 과제</span>
+            <span id="activeArcherDrillSpec" class="font-black text-slate-800 text-xs truncate">턱밑 깍지 1초 밀착</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Archers List Grid -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-black text-slate-800 flex items-center gap-1.5">
+            <i data-lucide="users" class="w-4 h-4 text-teal-700"></i>
+            <span>등록된 사수 명단 (<span id="archersCountDisplay">4</span>명)</span>
+          </h3>
+          <span class="text-xs text-slate-500 font-bold">사수를 클릭하여 즉시 출전 사수로 교체할 수 있습니다.</span>
+        </div>
+
+        <div id="archersCardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 2: 사대 습사 (연습 & 승단 45시 기록 매트릭스) -->
+    <!-- ============================================================== -->
+    <div id="viewShoot" class="space-y-4 sm:space-y-5 hidden">
+      
+      <!-- Session Settings Bar -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-clay border border-slate-200 space-y-3.5">
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-center">
+          
+          <div class="md:col-span-6 flex flex-col sm:flex-row gap-2.5">
+            <div class="w-full sm:w-36">
+              <label class="block text-[11px] font-black text-slate-500 mb-1">습사 일자 *</label>
+              <input type="date" id="sessionDate" onchange="onSessionDateChange(this.value)" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:bg-white focus:outline-none">
+            </div>
+            <div class="flex-1">
+              <label class="block text-[11px] font-black text-slate-500 mb-1">
+                전국 습사 활터 <span class="text-teal-700 font-black">(기본: 진안 마이정 / 전북 20개 사정 완비)</span>
+              </label>
+              <select id="sessionLocation" onchange="onLocationChange(this.value)" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white focus:outline-none">
+                <!-- Dynamically populated or group populated -->
+              </select>
+            </div>
+          </div>
+
+          <div class="md:col-span-6 flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+            <div class="flex-1 min-w-[120px]">
+              <label class="block text-[11px] font-black text-slate-500 mb-1">습사 모드</label>
+              <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-black">
+                <button type="button" id="btnModePractice" onclick="setMode('practice')" class="py-1 rounded-lg transition text-white bg-teal-700 shadow-xs">
+                  연습
+                </button>
+                <button type="button" id="btnModePromotion" onclick="setMode('promotion')" class="py-1 rounded-lg transition text-slate-600 hover:text-slate-900">
+                  승단(45시)
+                </button>
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-[130px]">
+              <label class="block text-[11px] font-black text-slate-500 mb-1 flex items-center justify-between">
+                <span>오늘 목표</span>
+                <span id="targetGoalValueDisplay" class="text-teal-700 font-black">28중 (3단)</span>
+              </label>
+              <input type="range" id="targetGoalSlider" min="15" max="45" value="28" 
+                     oninput="updateTargetGoal(this.value)" 
+                     class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-700">
+            </div>
+
+            <div class="self-end pb-0.5">
+              <button onclick="confirmResetCurrentSession()" class="px-3 py-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-black transition flex items-center space-x-1" title="습사 초기화">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">초기화</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Weather and Date Synced Ballistic Bar -->
+        <div class="bg-gradient-to-r from-sky-50 via-teal-50/60 to-amber-50/50 border border-sky-200 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-xs shrink-0">
+              <i id="weatherIconDisplay" data-lucide="cloud-sun" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span id="weatherLocationTag" class="text-xs font-black text-slate-800">진안 마이정 (선택일자 기상)</span>
+                <span id="weatherConditionTag" class="text-[10px] font-black text-sky-800 bg-sky-100 px-2 py-0.5 rounded-full">맑고 쾌청</span>
+              </div>
+              <div class="flex items-center space-x-2.5 mt-0.5 text-xs font-bold text-slate-600">
+                <span id="weatherTempDisplay">기온 18.5°C</span>
+                <span class="text-slate-300">·</span>
+                <span id="weatherWindDisplay" class="text-sky-900 font-black">남서풍 1.8 m/s</span>
+                <span class="text-slate-300">·</span>
+                <span id="weatherPressureDisplay" class="text-teal-900 font-black">기압 1016 hPa</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white/95 border border-teal-300 rounded-xl px-3 py-1.5 text-[11px] font-bold text-slate-800 flex items-center space-x-1.5 self-start sm:self-auto shadow-2xs">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+            <span id="weatherTacticalTip">기압 1016 hPa: 안정된 포물선 탄도. 과녁 흑심을 정조준하십시오.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 4 Live Status Metrics Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-clay border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-black">
+            <span>총 관중수 (45시)</span>
+            <div class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i data-lucide="target" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="my-2 flex items-baseline space-x-1.5">
+            <span id="displayTotalHits" class="text-4xl sm:text-5xl font-black text-emerald-600 tracking-tight">0</span>
+            <span class="text-xs sm:text-sm font-bold text-slate-400">/ <span id="displayShotArrows">0</span>시 발사</span>
+          </div>
+          <div class="flex items-center justify-between text-xs font-black pt-2 border-t border-slate-100">
+            <span class="text-slate-500">현재 적중률</span>
+            <span id="displayHitRate" class="text-emerald-700 text-sm sm:text-base font-black">0.0%</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-clay border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-black">
+            <span>몰기(沒技) 달성</span>
+            <div class="w-7 h-7 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+              <i data-lucide="trophy" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="my-2 flex items-baseline space-x-1.5">
+            <span id="displayMolgiCount" class="text-4xl sm:text-5xl font-black text-amber-500 tracking-tight">0</span>
+            <span class="text-xs sm:text-sm font-bold text-slate-400">회 (5/5 관중)</span>
+          </div>
+          <div class="text-[11px] font-bold text-slate-500 truncate pt-2 border-t border-slate-100" id="displayMolgiRounds">
+            아직 몰기 기록이 없습니다.
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-clay border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-black">
+            <span>목표 관중 달성률</span>
+            <div class="w-7 h-7 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+              <i data-lucide="flame" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="my-1.5">
+            <div class="flex items-baseline justify-between mb-1">
+              <span id="displayGoalProgressPct" class="text-2xl sm:text-3xl font-black text-rose-600">0%</span>
+              <span class="text-xs font-black text-slate-400" id="displayGoalProgressRatio">0 / 28중</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div id="goalProgressBar" class="bg-gradient-to-r from-amber-400 to-rose-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+            </div>
+          </div>
+          <div class="text-[11px] font-black text-slate-600 truncate pt-1" id="displayGoalStatusText">
+            목표까지 28중 남음
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-white rounded-3xl p-4 sm:p-5 shadow-clay flex flex-col justify-between">
+          <div class="flex items-center justify-between text-teal-300 text-xs font-black">
+            <span>공인 승단 판정 (개정규정)</span>
+            <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <div class="my-2">
+            <div id="displayDanEvaluationBadge" class="text-xl sm:text-2xl font-black text-teal-300 tracking-tight">
+              1급 미달
+            </div>
+            <p id="displayDanEvaluationSub" class="text-[11px] text-slate-300 mt-0.5">
+              1급(22중)까지 22중 남음
+            </p>
+          </div>
+          <div class="text-[10px] text-teal-400 font-extrabold flex items-center justify-between pt-1 border-t border-slate-700">
+            <span>초단 24중 (+2중씩)</span>
+            <span id="displayDanNextHint">다음: 1급(22중)</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Round Lane Controller & One-touch Arrow Matrix -->
+      <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-clay border border-slate-200 space-y-4">
+        
+        <!-- Round Tabs Navigation (1순 ~ 9순) -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs sm:text-sm font-black text-slate-900">순별 사대 선택</span>
+            <span class="text-[11px] text-slate-400 font-bold hidden sm:inline">(1순 = 5시 / 총 9순 45시)</span>
+          </div>
+          
+          <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
+            <div id="roundTabButtons" class="flex space-x-1 sm:space-x-1.5"></div>
+          </div>
+        </div>
+
+        <!-- Active Round Interactive Input Area -->
+        <div class="bg-gradient-to-b from-slate-50 to-teal-50/20 border-2 border-teal-200 rounded-3xl p-3.5 sm:p-6 space-y-4">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-8 h-8 rounded-xl bg-teal-700 text-white flex items-center justify-center font-black text-sm shadow-xs" id="activeRoundNumberBadge">1</span>
+              <div>
+                <span id="activeRoundTitle" class="text-base sm:text-lg font-black text-slate-900">제 1순 습사대</span>
+                <span id="activeRoundMolgiBadge" class="hidden ml-2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-black text-xs rounded-full shadow-xs animate-bounce">
+                  ★ 5중 몰기(沒技)!
+                </span>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 text-xs font-black">
+              <div class="px-3 py-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                당순 관중: <strong id="activeRoundHitsDisplay" class="text-emerald-600 text-sm font-black">0</strong> / 5중
+              </div>
+              <div class="px-3 py-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                누계: <strong id="activeCumulativeHitsDisplay" class="text-slate-900 text-sm font-black">0</strong>시
+              </div>
+              <div class="flex items-center space-x-1 text-[11px] font-black">
+                <span class="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800" id="badgeRoundMissFront">앞 0</span>
+                <span class="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-900" id="badgeRoundMissBack">뒤 0</span>
+                <span class="px-2 py-0.5 rounded-lg bg-sky-100 text-sky-800" id="badgeRoundMissShort">단 0</span>
+                <span class="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800" id="badgeRoundMissLong">장 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Realtime Lane Tactical Advice Banner -->
+          <div id="liveRealtimeCoachBanner" class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 border-2 border-teal-400 rounded-3xl p-3.5 sm:p-4 text-white shadow-clay space-y-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black shadow-xs shrink-0 animate-pulse">
+                  <i data-lucide="compass" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400 text-slate-950 uppercase tracking-wider">
+                      ● 사대 실시간 사법 코칭
+                    </span>
+                    <span id="liveCoachArrowTag" class="text-xs font-black text-amber-300">
+                      초시(1시) 발사 준비
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2 text-[11px] font-bold text-slate-300">
+                <span id="liveCoachEnvMini" class="px-2.5 py-0.5 bg-white/10 rounded-lg text-teal-300">
+                  진안 마이정 · 남서풍 1.8 m/s
+                </span>
+                <button onclick="switchTab('advice')" class="px-2.5 py-0.5 bg-teal-700/60 hover:bg-teal-700 text-white rounded-lg text-[10px] font-black transition flex items-center space-x-1">
+                  <span>정밀 분석 열기</span>
+                  <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Real-time Tactical Advice Text -->
+            <div class="flex items-start space-x-2 pt-0.5">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+              <p id="liveCoachAdviceText" class="text-xs font-bold text-slate-100 leading-relaxed">
+                사대에 서서 호흡을 가다듬고 정심정기로 초시를 쏘십시오. 발시 후 결과를 터치하면 즉각 다음 살 처방이 제공됩니다.
+              </p>
+            </div>
+          </div>
+
+          <!-- 5 Arrow Input Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" id="arrowCardsGrid"></div>
+
+          <!-- Round Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-200">
+            <div class="flex items-center space-x-2">
+              <button onclick="fillActiveRound(true)" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black transition flex items-center space-x-1.5 shadow-md shadow-emerald-500/20 active:scale-95">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                <span>전중(5중 몰기)</span>
+              </button>
+              <button onclick="clearActiveRound()" class="px-3.5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-black transition active:scale-95">
+                당순 지우기
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button onclick="navRound(-1)" id="btnPrevRound" class="px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl text-xs font-black text-slate-700 transition flex items-center space-x-1 shadow-2xs">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                <span>이전 순</span>
+              </button>
+              <button onclick="navRound(1)" id="btnNextRound" class="px-4 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black transition flex items-center space-x-1 shadow-md shadow-teal-700/20">
+                <span>다음 순</span>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 9-Round Complete Matrix Overview Table -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200">
+          <table class="w-full text-center border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 text-xs font-black border-b border-slate-200">
+                <th class="py-3 px-2">순차</th>
+                <th class="py-3 px-2">초시(1)</th>
+                <th class="py-3 px-2">이시(2)</th>
+                <th class="py-3 px-2">삼시(3)</th>
+                <th class="py-3 px-2">사시(4)</th>
+                <th class="py-3 px-2">오시(5)</th>
+                <th class="py-3 px-2 bg-emerald-50 text-emerald-900 font-black">순계</th>
+                <th class="py-3 px-2 bg-slate-200 text-slate-900 font-black">누계</th>
+                <th class="py-3 px-2">불관 요약</th>
+                <th class="py-3 px-2">상태</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody" class="divide-y divide-slate-100 text-xs font-bold text-slate-700"></tbody>
+          </table>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          <div class="text-xs font-bold text-slate-500">
+            총 45시 습사가 끝나면 기록을 저장하고 <strong class="text-teal-800">5단계 보관함</strong>에서 언제든 복기하거나 <strong class="text-teal-800">전통 矢紙(시지)</strong>를 출력할 수 있습니다.
+          </div>
+          <div class="flex items-center space-x-2 w-full sm:w-auto">
+            <button onclick="saveCurrentSessionToHistory()" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 hover:from-teal-800 hover:to-emerald-700 text-white rounded-2xl text-xs sm:text-sm font-black shadow-lg shadow-teal-700/25 transition flex items-center justify-center space-x-2 active:scale-95">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>습사 일지 저장 & 보관함 기록</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 3: 국궁장 & 날씨 & 활·화살에 따른 사법 조언 -->
+    <!-- ============================================================== -->
+    <div id="viewAdvice" class="space-y-5 hidden">
+      
+      <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 bg-teal-100 text-teal-800 text-[10px] font-black rounded-full uppercase tracking-wider">3단계: 맞춤 사법 비전 & AI 문답</span>
+            <h2 class="text-base sm:text-lg font-black text-slate-900">
+              <span id="adviceArcherNameDisplay" class="text-teal-700">이순신</span> 궁사 맞춤 사법 & 기상 탄도 조언
+            </h2>
+          </div>
+          <p class="text-xs text-slate-500 font-bold mt-1">
+            선택하신 <strong>출전 궁사의 단위(0단~9단)</strong>, <strong>장비(활 크기/세기, 화살 돈수/치수)</strong> 및 <strong>활터의 날짜별 기상(풍향·풍속·기압)</strong>이 결합된 실전 조언입니다.
+          </p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="requestAiArcheryAdvice()" id="btnRequestAiAdvice" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 via-amber-600 to-teal-700 hover:from-amber-600 hover:to-teal-800 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/20 transition flex items-center space-x-1.5 active:scale-95">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>AI 명궁 사두 심층 총평</span>
+          </button>
+          <button onclick="switchTab('shoot')" class="px-4 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black shadow-md transition flex items-center space-x-1.5">
+            <i data-lucide="crosshair" class="w-4 h-4"></i>
+            <span>사대 습사로 복귀</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Equipment & Weather Interactive Controls -->
+      <div class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white rounded-3xl p-4 sm:p-5 shadow-clay space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+              <i data-lucide="sliders" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-xs font-black text-teal-300">활·화살 제원 및 활터 기상 실시간 시뮬레이터</span>
+              <p class="text-[11px] text-slate-300 font-bold">궁사 제원이 기본 적용되어 있으며, 값을 변경하면 아래 탄도학 조언이 즉각 재계산됩니다.</p>
+            </div>
+          </div>
+          <div class="text-xs font-bold text-amber-300">
+            기본 설정: <span id="adviceJeongDisplay">진안 마이정</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+          <!-- 1. 활터 선택 -->
+          <div class="bg-white/10 rounded-2xl p-3 border border-white/10 space-y-1.5">
+            <label class="block text-[11px] font-black text-teal-200">1. 활터 변경 (전북 20개 사정 완비)</label>
+            <select id="adviceLocationSelect" onchange="onAdviceLocationChange(this.value)" class="w-full text-xs font-bold bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <!-- Dynamically populated -->
+            </select>
+            <div class="text-[10px] text-slate-300 font-bold truncate" id="adviceLocationWeatherMini">
+              진안 마이정 · 18.5°C · 남서풍 1.8 m/s · 1016 hPa
+            </div>
+          </div>
+
+          <!-- 2. 활 크기 & 파운드 선택 -->
+          <div class="bg-white/10 rounded-2xl p-3 border border-white/10 space-y-1.5">
+            <label class="block text-[11px] font-black text-amber-300">2. 활 크기 & 종류 (단궁·중궁·장궁)</label>
+            <div class="grid grid-cols-3 gap-1">
+              <button onclick="setAdviceBowLength('단궁')" id="btnBowLen-단궁" class="py-1 px-1.5 rounded-lg text-xs font-black transition border text-slate-300 border-slate-700 bg-slate-800">
+                단궁(短)
+              </button>
+              <button onclick="setAdviceBowLength('중궁')" id="btnBowLen-중궁" class="py-1 px-1.5 rounded-lg text-xs font-black transition border bg-amber-500 text-slate-950 border-amber-400 shadow-xs">
+                중궁(中)
+              </button>
+              <button onclick="setAdviceBowLength('장궁')" id="btnBowLen-장궁" class="py-1 px-1.5 rounded-lg text-xs font-black transition border text-slate-300 border-slate-700 bg-slate-800">
+                장궁(長)
+              </button>
+            </div>
+            <div class="flex items-center space-x-1.5 pt-0.5">
+              <input type="text" id="adviceBowCustomInput" placeholder="활 종류/세기 (예: 개량궁 48#)" 
+                     class="w-full text-xs font-bold bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white focus:outline-none"
+                     onchange="updateAdviceCustomBow(this.value)">
+            </div>
+          </div>
+
+          <!-- 3. 화살 사양 (재질, 중량, 길이) -->
+          <div class="bg-white/10 rounded-2xl p-3 border border-white/10 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-black text-sky-200">3. 화살(矢) 재질 · 중량 · 길이</label>
+              <span id="adviceArrowBadge" class="text-[10px] font-black text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded">
+                카본시 6.5돈 (2자 6.0치)
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-1.5">
+              <select id="adviceArrowMaterialSelect" onchange="onAdviceArrowConfigChange()" class="text-xs font-bold bg-slate-800 border border-slate-700 rounded-lg px-1.5 py-1 text-white focus:outline-none">
+                <option value="카본시" selected>카본시</option>
+                <option value="전통 죽시">전통 죽시</option>
+                <option value="개량 죽시">개량 죽시</option>
+              </select>
+
+              <select id="adviceArrowWeightSelect" onchange="onAdviceArrowConfigChange()" class="text-xs font-black bg-slate-800 border border-amber-400/50 rounded-lg px-1.5 py-1 text-amber-300 focus:outline-none">
+                <option value="5.0">5.0돈</option>
+                <option value="5.5">5.5돈</option>
+                <option value="6.0">6.0돈</option>
+                <option value="6.5" selected>6.5돈</option>
+                <option value="7.0">7.0돈</option>
+                <option value="7.5">7.5돈</option>
+                <option value="8.0">8.0돈</option>
+                <option value="8.5">8.5돈</option>
+              </select>
+
+              <select id="adviceArrowLengthSelect" onchange="onAdviceArrowConfigChange()" class="text-xs font-bold bg-slate-800 border border-slate-700 rounded-lg px-1.5 py-1 text-sky-200 focus:outline-none">
+                <option value="2자 5.0치">2자 5.0치</option>
+                <option value="2자 5.5치">2자 5.5치</option>
+                <option value="2자 6.0치" selected>2자 6.0치</option>
+                <option value="2자 6.5치">2자 6.5치</option>
+                <option value="2자 7.0치">2자 7.0치</option>
+                <option value="2자 7.5치">2자 7.5치</option>
+                <option value="2자 8.0치">2자 8.0치</option>
+              </select>
+            </div>
+
+            <div class="text-[10px] text-teal-300 font-bold leading-tight" id="adviceArrowDescription">
+              카본시 6.5돈 (2자 6.0치): 사계절 가장 균형 잡힌 탄도 곡선과 최적의 직진성을 발휘합니다.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4 Tailored Advice Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+        
+        <!-- Card 1: Aiming & Wind Offset -->
+        <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                  <i data-lucide="wind" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-900">1. 바람과 오조준(겨냥점) 보정</h3>
+              </div>
+              <span id="adviceWindBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800">
+                남서풍 1.8 m/s
+              </span>
+            </div>
+            
+            <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-700 font-bold">
+              <div class="p-3 bg-sky-50 border border-sky-200 rounded-2xl">
+                <span class="text-sky-900 font-black block mb-1 flex items-center gap-1">
+                  <i data-lucide="crosshair" class="w-3.5 h-3.5 text-sky-600"></i>
+                  과녁 겨냥점(오조준) 지침
+                </span>
+                <p id="adviceAimingOffsetTxt" class="text-slate-800 font-bold">
+                  남서풍의 약한 측풍입니다. 과녁 흑심을 기준으로 <strong>앞(좌측)으로 반 뼘(약 10~15cm)</strong> 이동하여 오조준하십시오.
+                </p>
+              </div>
+
+              <div class="text-[11px] text-slate-600 space-y-1 pt-1">
+                <p>• <strong>발시 타이밍:</strong> 사대 깃발이 아래로 처지는 정온(靜穩) 구간에 깍지손을 과감히 떼어내십시오.</p>
+                <p>• <strong>줌손 지지:</strong> 맞바람성 기운이 느껴질 때 줌손을 떨구면 화살이 단(거리부족)으로 떨어지므로 줌손 밭침을 끝까지 굳히십시오.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-sky-800">
+            <span>풍압 영향 계수: 보통</span>
+            <span id="adviceWindImpactScale">편차 약 ±12cm</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Pressure & Temperature Ballistics -->
+        <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+                  <i data-lucide="gauge" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-900">2. 대기압(hPa) & 기온 탄도학</h3>
+              </div>
+              <span id="advicePressureBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800">
+                1016 hPa (고기압)
+              </span>
+            </div>
+
+            <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-700 font-bold">
+              <div class="p-3 bg-teal-50 border border-teal-200 rounded-2xl">
+                <span class="text-teal-950 font-black block mb-1 flex items-center gap-1">
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-teal-600"></i>
+                  비거리(단·장) 영향 분석
+                </span>
+                <p id="adviceBallisticsTxt" class="text-slate-800 font-bold">
+                  기압이 1016 hPa로 공기 밀도가 높습니다. 화살에 가해지는 공기 항력이 평소보다 커져 <strong>비거리가 30~50cm 짧아질 수 있습니다(단 발생 주의).</strong>
+                </p>
+              </div>
+
+              <div class="text-[11px] text-slate-600 space-y-1 pt-1">
+                <p>• <strong>높낮이 조준:</strong> 과녁 흑심보다 <strong>약 3~5cm 상단</strong>을 정조준하여 포물선 낙차를 선제 보정하십시오.</p>
+                <p>• <strong>만작 깊이:</strong> 활이 덜 당겨지면 즉시 단이 나므로 턱밑과 가슴을 시원하게 열어 완전 만작을 유지하십시오.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-teal-800">
+            <span>공기 밀도 지수: 1.22 kg/m³</span>
+            <span>낙차 보정: 상단 +4cm</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Bow Power & Length Dynamics -->
+        <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+                  <i data-lucide="shield" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-900">3. 활 크기(단·중·장궁) & 화살 사법</h3>
+              </div>
+              <span id="adviceBowTypeBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900">
+                [중궁] 개량궁 48#
+              </span>
+            </div>
+
+            <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-700 font-bold">
+              <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl">
+                <span class="text-amber-950 font-black block mb-1 flex items-center gap-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-600"></i>
+                  <span id="adviceBowLengthTitle">중궁(中弓) 사법 특징</span>
+                </span>
+                <p id="adviceBowActionTxt" class="text-slate-800 font-bold">
+                  중궁은 활대의 반발력과 줌손 안정성의 조화가 뛰어납니다. 48# 장력에 맞춰 줌손 엄지뿌리를 과녁 쪽으로 굳게 뻗치고 깍지손을 귀 뒤로 떼어내십시오.
+                </p>
+              </div>
+
+              <div class="text-[11px] text-slate-600 space-y-1 pt-1" id="adviceArrowSubNotes">
+                <p>• <strong>크기별 유의점:</strong> 단궁은 회전 채임이 빠르므로 줌손이 굳어야 하며, 장궁은 만작이 부드러우나 측풍을 덜 타도록 오조준을 정교히 해야 합니다.</p>
+                <p>• <strong>화살 궁합:</strong> 선택하신 화살에 맞춰 깍지손 턱밑 걸림을 최소화하고 반듯하게 가르십시오.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-amber-900">
+            <span>궁체 전달 효율: 92%</span>
+            <span id="adviceGripRecommendation">권장: 흘려쥠(밀기)</span>
+          </div>
+        </div>
+
+        <!-- Card 4: Personal Miss Diagnosis -->
+        <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+                  <i data-lucide="activity" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-900">4. 당일 탄착 결점 & 사법 처방</h3>
+              </div>
+              <span id="adviceDominantMissBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">
+                결점 분석 중
+              </span>
+            </div>
+
+            <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-700 font-bold">
+              <div class="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
+                <span class="text-rose-950 font-black block mb-1 flex items-center gap-1">
+                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600"></i>
+                  주요 결점 극복 훈련 지침
+                </span>
+                <p id="adviceCorrectionDrillTxt" class="text-slate-800 font-bold">
+                  현재 기록을 바탕으로 분석 중입니다. 습사가 진행되면 불관 빈도에 따른 사법 처방이 즉각 갱신됩니다.
+                </p>
+              </div>
+
+              <div class="text-[11px] text-slate-600 space-y-1 pt-1">
+                <p>• <strong>집궁팔원칙:</strong> <span class="text-teal-700 font-black">흉허복실(胸虛腹實)</span> - 가슴을 비우고 아랫배에 기운을 채워 하체를 고정하십시오.</p>
+                <p>• <strong>사법 교정:</strong> 만작 후 1~2초간 턱밑 밀착과 호흡을 정돈하고, 줌손과 깍지손을 같은 속도로 분리하십시오.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-rose-700">
+            <span>사법 집중 포인트</span>
+            <span>줌손 밀기 & 턱밑 깍지 1초 유지</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Interactive Gemini AI Archery Master Q&A Chatroom -->
+      <div class="bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 border-2 border-teal-500/80 rounded-3xl p-4 sm:p-6 text-white shadow-clay space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-teal-800/80 pb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white flex items-center justify-center font-black shadow-md shadow-teal-500/30">
+              <i data-lucide="message-square" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-black text-white">AI 명궁 사두(射頭) 실시간 사법 자문</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400 text-slate-950 uppercase tracking-wider">
+                  Gemini 3 Flash Live
+                </span>
+              </div>
+              <p class="text-xs text-slate-300 font-bold">
+                불관 원인, 활 크기/세기, 화살 돈수, 날씨 오조준 및 심리적 떨림을 질문하시면 명궁 사두가 즉시 사법 비전으로 답합니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="clearMasterChat()" class="px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+              대화 비우기
+            </button>
+          </div>
+        </div>
+
+        <!-- Rapid Question Chips -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
+          <span class="text-[11px] font-black text-amber-300 shrink-0">빠른 질문:</span>
+          <button onclick="sendQuickQuery('앞남(좌측 이탈)이 계속 나옵니다. 줌손과 깍지손 교정법은 무엇인가요?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
+            🏹 앞남 원인과 교정
+          </button>
+          <button onclick="sendQuickQuery('화살이 145m 과녁 앞에서 뚝 떨어집니다(단 발생). 비거리 회복 요령은?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
+            🎯 거리부족(단) 극복
+          </button>
+          <button onclick="sendQuickQuery('만작 시 줌손 엄지뿌리가 떨리고 뒤남(우측 이탈)이 발생합니다.')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
+            ✋ 줌손 떨림 및 뒤남
+          </button>
+          <button onclick="sendQuickQuery('현재 활터의 바람과 기압에서 오조준 요령을 알려주세요.')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
+            💨 바람·기압 오조준 요령
+          </button>
+          <button onclick="sendQuickQuery('0단 입문자로서 1급(22중) 및 초단(24중)으로 도약하기 위한 핵심 집궁 원칙은?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 transition whitespace-nowrap border border-amber-400/30 active:scale-95">
+            ★ 0단~초단 승단 멘탈
+          </button>
+        </div>
+
+        <!-- Chat History Scroll Box -->
+        <div id="aiMasterChatBox" class="h-64 sm:h-72 overflow-y-auto space-y-3 p-3.5 bg-slate-950/70 rounded-2xl border border-teal-900/60 text-xs font-medium">
+          <!-- Initial Welcome Message -->
+          <div class="flex items-start space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-teal-500 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5 shadow-xs">
+              頭
+            </div>
+            <div class="p-3.5 bg-teal-900/40 border border-teal-700/60 rounded-2xl rounded-tl-none text-slate-200 leading-relaxed max-w-2xl font-bold">
+              반갑습니다, 궁사님! 저는 전통 사법비전(射法秘傳)과 집궁팔원칙(執弓八原則)을 전수하는 AI 명궁 사두(射頭)입니다. 사대에서 마주치는 불관 증상, 줌손·깍지손의 어긋남, 바람과 장비의 궁합 등 무엇이든 편하게 물어보십시오.
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="text" id="aiMasterInput" placeholder="예: 3순부터 체력이 떨어지며 화살이 아래로 처지는데 흉허복실 호흡법은 어떻게 하나요?"
+                 class="flex-1 text-xs font-bold bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder:text-slate-500"
+                 onkeydown="if(event.key==='Enter') sendMasterChatQuestion()">
+          <button onclick="sendMasterChatQuestion()" id="btnSendMasterChat" class="px-5 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-xs font-black transition flex items-center space-x-1.5 shadow-md shrink-0 active:scale-95">
+            <span>질문하기</span>
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 4: 전통 矢紙 (시지 & 불관 메모란 & A4 인쇄) -->
+    <!-- ============================================================== -->
+    <div id="viewSiji" class="space-y-5 hidden">
+      
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-clay border border-slate-200 flex flex-wrap items-center justify-between gap-3 no-print">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-md text-[10px] font-black">대한궁도협회 규격</span>
+            <h2 class="text-base sm:text-lg font-black text-slate-900">전통 矢紙 (시지 성적표 & 불관 사법 메모)</h2>
+          </div>
+          <p class="text-xs text-slate-500 font-bold mt-0.5">
+            본문 표에는 정갈한 시수를 기록하고, <strong>하단 전용 메모란</strong>에 불관 원인과 교정 사법을 체계적으로 수록합니다.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="copySijiText()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black transition flex items-center space-x-1.5 shadow-2xs">
+            <i data-lucide="copy" class="w-4 h-4 text-slate-600"></i>
+            <span>텍스트 복사 (카톡/밴드)</span>
+          </button>
+          <button onclick="window.print()" class="px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black transition flex items-center space-x-1.5 shadow-md shadow-teal-700/20 active:scale-95">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>시지 인쇄 (A4 / PDF)</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="sijiPrintContainer" class="hanji-paper rounded-3xl p-6 sm:p-10 border-2 border-stone-400 shadow-clay max-w-4xl mx-auto font-serif">
+        
+        <div class="text-center relative pb-5 border-b-2 border-stone-800 mb-6">
+          <h1 class="text-3xl sm:text-4xl font-black text-stone-900 tracking-widest mb-1">矢 紙 (습사성적표)</h1>
+          <p class="text-xs sm:text-sm font-semibold text-stone-600 tracking-wider">弘益人間 忠孝禮義 射以觀德</p>
+          <div class="absolute right-0 top-0 border-2 border-red-700 text-red-700 px-3 py-1 font-black text-xs rotate-[-3deg] hidden sm:block">
+            弓道正鵠
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm text-stone-800 border-b border-stone-300 pb-4 mb-5 font-sans">
+          <div>
+            <span class="text-stone-500 font-bold">습사일자:</span>
+            <span id="sijiDate" class="font-black ml-1">2026-10-04</span>
+          </div>
+          <div>
+            <span class="text-stone-500 font-bold">소속 활터:</span>
+            <span id="sijiJeong" class="font-black ml-1 text-teal-900">진안 마이정</span>
+          </div>
+          <div>
+            <span class="text-stone-500 font-bold">궁사 성명:</span>
+            <span id="sijiArcherName" class="font-black ml-1 text-stone-900">이순신</span>
+          </div>
+          <div>
+            <span class="text-stone-500 font-bold">궁체 제원:</span>
+            <span id="sijiBow" class="font-bold ml-1">[중궁] 개량궁 48# / 카본 6.5돈</span>
+          </div>
+          
+          <div class="col-span-2 sm:col-span-4 bg-stone-100 border border-stone-300 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-0.5 bg-stone-800 text-stone-100 rounded font-serif font-black text-[10px]">
+                습사 시 기상
+              </span>
+              <span id="sijiWeatherText" class="font-black text-stone-900">
+                진안 마이정 기상: 맑고 쾌청 (18.5°C) · 남서풍 1.8 m/s · 기압 1016 hPa
+              </span>
+            </div>
+            <span class="text-[10px] text-stone-500 font-bold hidden sm:inline font-serif">
+              대한궁도협회 규격 기상 탄도 공인 기록
+            </span>
+          </div>
+        </div>
+
+        <!-- 9-Round Siji Clean Table -->
+        <div class="overflow-x-auto mb-6">
+          <table class="w-full text-center border-2 border-stone-900 text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-stone-200 text-stone-900 border-b-2 border-stone-900 font-serif font-black">
+                <th class="py-2.5 px-2 border-r border-stone-400">순 (巡)</th>
+                <th class="py-2.5 px-2 border-r border-stone-400">초시 (初)</th>
+                <th class="py-2.5 px-2 border-r border-stone-400">이시 (二)</th>
+                <th class="py-2.5 px-2 border-r border-stone-400">삼시 (三)</th>
+                <th class="py-2.5 px-2 border-r border-stone-400">사시 (四)</th>
+                <th class="py-2.5 px-2 border-r border-stone-400">오시 (五)</th>
+                <th class="py-2.5 px-2 border-r border-stone-400 font-black bg-stone-300/40">순계 (計)</th>
+                <th class="py-2.5 px-2 font-black bg-stone-300/60">누계 (累)</th>
+              </tr>
+            </thead>
+            <tbody id="sijiTableBody" class="divide-y divide-stone-300 border-stone-900 font-sans"></tbody>
+          </table>
+        </div>
+
+        <!-- Siji Score Summary Box -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 border-2 border-stone-800 p-4 bg-white/70 mb-6 font-sans">
+          
+          <div class="sm:col-span-8 space-y-2 text-xs sm:text-sm text-stone-900">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span>총 발사: <strong>45시</strong></span>
+              <span>총 관중수: <strong id="sijiTotalHits" class="text-xl sm:text-2xl text-emerald-800 font-black">0</strong>중</span>
+              <span>적중률: <strong id="sijiHitRate" class="text-base font-black">0.0%</strong></span>
+              <span>몰기(沒技): <strong id="sijiMolgiCount" class="text-amber-800 font-black">0</strong>회</span>
+            </div>
+            <div class="text-xs text-stone-700">
+              공인 판정: <strong id="sijiJudgementText" class="text-stone-950 font-black text-sm">1급 미달 (개정 1급 22중 기준)</strong>
+            </div>
+          </div>
+
+          <div class="sm:col-span-4 flex items-center justify-around text-center text-xs font-serif pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-stone-300">
+            <div>
+              <div class="text-[11px] text-stone-500 mb-1">궁사 본인</div>
+              <div id="sijiArcherSignature" class="w-14 h-14 border border-stone-400 rounded-lg flex items-center justify-center font-bold text-stone-700 text-xs">
+                이순신<br>(인)
+              </div>
+            </div>
+            <div>
+              <div class="text-[11px] text-stone-500 mb-1">사범 / 심판</div>
+              <div class="w-14 h-14 border border-stone-400 rounded-lg flex items-center justify-center text-stone-400 text-xs font-sans">
+                확인(인)
+              </div>
+            </div>
+            <div>
+              <div class="text-[11px] text-stone-500 mb-1">사두 (射頭)</div>
+              <div class="w-14 h-14 border-2 border-red-800 rounded-lg flex items-center justify-center text-red-800 font-black text-xs">
+                馬耳亭<br>射頭印
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Siji Dedicated Miss Reasons Section -->
+        <div class="border-2 border-amber-900/30 rounded-2xl bg-amber-50/50 p-4 sm:p-5 font-sans space-y-3.5 shadow-2xs">
+          
+          <div class="flex items-center justify-between border-b border-amber-200 pb-2">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs font-black">
+                <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+              </span>
+              <h3 class="text-sm font-black text-amber-950">불관(不貫) 원인 분석 및 사법 교정 메모</h3>
+            </div>
+            <span class="text-[11px] font-bold text-amber-800">
+              사두·사범 강평 및 개인 피드백
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-black">
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-rose-800">앞남 (前):</span>
+              <span id="memoMissFrontCount" class="text-base text-rose-900 font-black">0회</span>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-amber-900">뒤남 (後):</span>
+              <span id="memoMissBackCount" class="text-base text-amber-950 font-black">0회</span>
+            </div>
+            <div class="bg-sky-50 border border-sky-200 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-sky-800">거리부족 (短):</span>
+              <span id="memoMissShortCount" class="text-base text-sky-950 font-black">0회</span>
+            </div>
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-purple-800">거리초과 (長):</span>
+              <span id="memoMissLongCount" class="text-base text-purple-950 font-black">0회</span>
+            </div>
+          </div>
+
+          <div class="bg-white/80 rounded-xl p-3 border border-amber-200 text-xs space-y-1">
+            <div class="font-black text-slate-800 mb-1 flex items-center justify-between">
+              <span>● 순별 불관 화살 상세 기록:</span>
+              <span class="text-[10px] text-slate-400">자동 집계</span>
+            </div>
+            <div id="memoMissArrowDetails" class="text-slate-600 font-bold leading-relaxed">
+              기록된 불관 화살이 없습니다. 전중 또는 연습 중입니다.
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-black text-slate-700 mb-1">
+              ● 사법 교정 및 습사 자평 (직접 입력 가능):
+            </label>
+            <textarea id="sijiCustomMemoInput" rows="2" placeholder="예: 줌손이 덜 굳어 앞남이 3회 발생함. 만작 시 턱밑 밀착과 호흡을 고르게 하고 깍지손을 끝까지 채는 훈련 필요."
+                      class="w-full text-xs font-bold bg-white border border-amber-200 rounded-xl p-2.5 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+          </div>
+
+        </div>
+
+        <div class="text-center text-[11px] text-stone-500 tracking-wider mt-5">
+          대한궁도협회 공인 승단 규정 준수 · 전북 진안 마이정 (馬耳亭) 공인 矢紙
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 5: 습사 과거이력 보관함 & 사대 복기 -->
+    <!-- ============================================================== -->
+    <div id="viewHistory" class="space-y-5 hidden">
+      
+      <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 bg-teal-100 text-teal-800 text-[10px] font-black rounded-full uppercase tracking-wider">영구 보관함</span>
+            <h2 class="text-base sm:text-lg font-black text-slate-900">
+              궁사 습사 과거이력 및 일지 보관함
+            </h2>
+          </div>
+          <p class="text-xs text-slate-500 font-bold mt-1">
+            저장된 모든 습사 일지를 날짜별, 궁사별로 확인하고 언제든 <strong>당시 矢紙(시지) 양식으로 열람</strong>하거나 <strong>사대로 다시 불러와</strong> 복기할 수 있습니다.
+          </p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="exportHistoryBackup()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition flex items-center space-x-1 shadow-2xs">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>백업 다운로드</span>
+          </button>
+          <button onclick="triggerHistoryRestore()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition flex items-center space-x-1 shadow-2xs">
+            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+            <span>일지 복원</span>
+          </button>
+          <input type="file" id="historyRestoreFileInput" accept=".json" class="hidden" onchange="handleHistoryFileRestore(event)">
+        </div>
+      </div>
+
+      <!-- History Statistics Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <span class="text-[11px] font-black text-slate-400 block mb-1">총 기록된 습사</span>
+          <span id="histSummaryTotalSessions" class="text-2xl sm:text-3xl font-black text-teal-700">0</span>
+          <span class="text-xs text-slate-500 font-bold ml-1">회차</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <span class="text-[11px] font-black text-slate-400 block mb-1">역대 최고 관중수</span>
+          <span id="histSummaryMaxHits" class="text-2xl sm:text-3xl font-black text-emerald-600">0</span>
+          <span class="text-xs text-slate-500 font-bold ml-1">/ 45시</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <span class="text-[11px] font-black text-slate-400 block mb-1">누적 발사 화살수</span>
+          <span id="histSummaryTotalArrows" class="text-2xl sm:text-3xl font-black text-slate-800">0</span>
+          <span class="text-xs text-slate-500 font-bold ml-1">시 (화살)</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <span class="text-[11px] font-black text-slate-400 block mb-1">역대 총 몰기(沒技)</span>
+          <span id="histSummaryTotalMolgi" class="text-2xl sm:text-3xl font-black text-amber-500">0</span>
+          <span class="text-xs text-slate-500 font-bold ml-1">회 달성</span>
+        </div>
+      </div>
+
+      <!-- History Filter Bar -->
+      <div class="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <label class="text-xs font-black text-slate-600 shrink-0">궁사별 필터:</label>
+          <select id="historyFilterArcherSelect" onchange="renderHistoryList()" class="bg-slate-50 border border-slate-200 text-xs font-black rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-teal-500 focus:outline-none w-full sm:w-44">
+            <option value="ALL">전체 궁사 이력</option>
+          </select>
+        </div>
+
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <div class="relative flex-1 sm:w-64">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
+            <input type="text" id="historySearchKeyword" placeholder="활터명, 사법 메모 검색..." 
+                   oninput="renderHistoryList()" 
+                   class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- History Cards Container -->
+      <div id="historyEntriesList" class="space-y-3.5"></div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 6: 향상도 & 결점 분석 (CHART.JS ANALYTICS) -->
+    <!-- ============================================================== -->
+    <div id="viewAnalytics" class="space-y-5 hidden">
+      
+      <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-slate-900">
+            <span id="analyticsArcherTitle" class="text-teal-700">이순신</span> 궁사 향상도 & 결점 정밀 진단
+          </h2>
+          <p class="text-xs text-slate-500 font-bold">적중률 성장 추이, 불관(앞·뒤·단·장) 탄착 결점 및 1~9순 페이싱을 종합 진단합니다.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="px-3.5 py-1.5 bg-teal-50 text-teal-800 rounded-xl text-xs font-black border border-teal-200">
+            누적 습사: <span id="analyticsSessionCount">3</span>회
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <div class="lg:col-span-8 bg-white rounded-3xl p-5 shadow-clay border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-teal-700"></i>
+              <h3 class="text-sm font-black text-slate-800">날짜별 적중률(%) 향상도 추이</h3>
+            </div>
+            <span class="text-[11px] text-slate-400 font-bold">최근 습사 일지 기준</span>
+          </div>
+          <div class="h-64">
+            <canvas id="chartTrend"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-rose-500"></i>
+              <h3 class="text-sm font-black text-slate-800">불관 원인(앞·뒤·단·장) 비율</h3>
+            </div>
+          </div>
+          <div class="h-52 relative flex items-center justify-center">
+            <canvas id="chartMissReasons"></canvas>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-600 mt-2">
+            <div class="bg-rose-50 p-2 rounded-xl border border-rose-100">
+              <span class="text-rose-700 font-black">앞남:</span> 줌손 흔들림/깍지 지체
+            </div>
+            <div class="bg-amber-50 p-2 rounded-xl border border-amber-100">
+              <span class="text-amber-800 font-black">뒤남:</span> 깍지 급발/턱걸림
+            </div>
+            <div class="bg-sky-50 p-2 rounded-xl border border-sky-100">
+              <span class="text-sky-800 font-black">단(부족):</span> 만작 불충분
+            </div>
+            <div class="bg-purple-50 p-2 rounded-xl border border-purple-100">
+              <span class="text-purple-800 font-black">장(초과):</span> 과조준/각도과대
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-12 bg-white rounded-3xl p-5 shadow-clay border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-600"></i>
+              <h3 class="text-sm font-black text-slate-800">1순~9순 페이싱 및 체력 집중도</h3>
+            </div>
+            <span class="text-[11px] text-slate-500 font-bold">후반부(7~9순) 집중력 유지 진단</span>
+          </div>
+          <div class="h-56">
+            <canvas id="chartPacing"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 7: 전북 20개 사정 전수 명단 안내 (JEONBUK ARCHERY RANGES) -->
+    <!-- ============================================================== -->
+    <div id="viewJeonbuk" class="space-y-5 hidden">
+      
+      <div class="bg-white rounded-3xl p-5 shadow-clay border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full uppercase">전북특별자치도</span>
+            <h2 class="text-base sm:text-lg font-black text-slate-900">전북 20개 사정(활터) 전수 명단 및 기상 탄도 특성</h2>
+          </div>
+          <p class="text-xs text-slate-500 font-bold mt-1">
+            <strong>진안 마이정(기본 활터)</strong>을 비롯하여 전북 전역 20개 사정의 위치, 지형 풍향 및 탄도 특성을 확인하고 원클릭으로 사대에 적용할 수 있습니다.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-black text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl">
+            총 20개 사정 완비
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="jeonbukRangesGrid">
+        <!-- Populated by JavaScript -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: 궁사 등록 및 장비 수정 팝업 (20#~70# & 화살 완비) -->
+  <!-- ============================================================== -->
+  <div id="manageArcherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-black">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900" id="archerModalTitle">궁사 정보 등록 (0단~)</h3>
+            <span class="text-[10px] text-teal-700 font-bold">활(20#~70#) · 화살(죽시/카본) · 0단 지원</span>
+          </div>
+        </div>
+        <button type="button" onclick="closeManageArchersModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="archerForm" onsubmit="return handleArcherFormSubmit(event)" class="space-y-3.5">
+        <input type="hidden" id="archerFormId" value="">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-black text-slate-700 mb-1">궁사 성명 *</label>
+            <input type="text" id="archerFormName" required placeholder="예: 이순신" 
+                   class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-black text-slate-700 mb-1">소속 활터(정) *</label>
+            <input type="text" id="archerFormJeong" required placeholder="예: 진안 마이정" value="진안 마이정"
+                   class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white focus:outline-none">
+          </div>
+        </div>
+
+        <!-- 단·급위 선택 (0단 수련궁사부터 9단 최고궁까지) -->
+        <div class="bg-amber-50/70 border border-amber-300 rounded-2xl p-3 space-y-1.5">
+          <label class="block text-xs font-black text-amber-950 flex items-center justify-between">
+            <span>목표 급·단위 (0단부터 공식 지원) *</span>
+            <span class="text-[10px] text-amber-800 font-bold">2026 공인 기준</span>
+          </label>
+          <select id="archerFormTargetDan" class="w-full text-xs font-black bg-white border border-amber-300 rounded-xl px-3 py-2 text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <optgroup label="수련 궁사 (기본기 확립)">
+              <option value="0단" selected>★ 0단 (수련궁사 / 기초 사법 확립 / 18중 목표)</option>
+              <option value="1급">1급 (공인 급수 / 22중 합격)</option>
+            </optgroup>
+            <optgroup label="유단자 (초단~4단: 24중부터 +2중씩 가산)">
+              <option value="초단">초단 / 1단 (24중)</option>
+              <option value="2단">2단 (26중)</option>
+              <option value="3단">3단 (28중)</option>
+              <option value="4단">4단 (30중)</option>
+            </optgroup>
+            <optgroup label="고단자 / 명궁 (5단부터 31중, 각궁·죽시 규정)">
+              <option value="5단">5단 명궁 (31중)</option>
+              <option value="6단">6단 (33중)</option>
+              <option value="7단">7단 (35중)</option>
+              <option value="8단">8단 (37중)</option>
+              <option value="9단">9단 최고궁 (39중)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- 활 크기 선택: 단궁, 중궁, 장궁 -->
+        <div>
+          <label class="block text-xs font-black text-slate-700 mb-1">활 크기(길이) 선택 *</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex items-center justify-center p-2 rounded-xl border border-slate-200 cursor-pointer text-xs font-black hover:bg-slate-50 has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500 has-[:checked]:text-teal-900 transition">
+              <input type="radio" name="archerFormBowLength" value="단궁" onchange="syncArcherFormBowPreview()" class="sr-only">
+              <span>단궁 (短弓)</span>
+            </label>
+            <label class="flex items-center justify-center p-2 rounded-xl border border-slate-200 cursor-pointer text-xs font-black hover:bg-slate-50 has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500 has-[:checked]:text-teal-900 transition">
+              <input type="radio" name="archerFormBowLength" value="중궁" checked onchange="syncArcherFormBowPreview()" class="sr-only">
+              <span>중궁 (中弓)</span>
+            </label>
+            <label class="flex items-center justify-center p-2 rounded-xl border border-slate-200 cursor-pointer text-xs font-black hover:bg-slate-50 has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500 has-[:checked]:text-teal-900 transition">
+              <input type="radio" name="archerFormBowLength" value="장궁" onchange="syncArcherFormBowPreview()" class="sr-only">
+              <span>장궁 (長弓)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 활 종류 및 세기(20#~70# 파운드 직접입력/슬라이더) -->
+        <div class="bg-teal-50/70 border border-teal-200 rounded-2xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-black text-teal-950">활 종류 및 세기 (20# ~ 70# 파운드) *</label>
+            <span id="archerFormBowPreview" class="text-[10px] font-black text-teal-900 bg-white border border-teal-300 px-2 py-0.5 rounded-full shadow-2xs">
+              [중궁] 개량궁 48#
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+            <div class="sm:col-span-5">
+              <span class="block text-[10px] font-bold text-slate-500 mb-0.5">활 종류</span>
+              <select id="archerFormBowType" onchange="syncArcherFormBowPreview()" class="w-full text-xs font-black bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                <option value="개량궁" selected>개량궁 (표준)</option>
+                <option value="각궁">각궁 (전통 쇠뿔활)</option>
+                <option value="카본궁">카본궁 (고탄성)</option>
+                <option value="연무궁">연무궁 (수련·연습용)</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-7">
+              <div class="flex items-center justify-between mb-0.5">
+                <span class="text-[10px] font-black text-slate-600">활 세기 (파운드: 20#~70#)</span>
+                <span class="text-xs font-black text-teal-700" id="archerFormBowWeightDisplay">48#</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input type="number" id="archerFormBowWeightNumber" min="20" max="70" step="1" value="48" 
+                       oninput="syncArcherFormBowWeight(this.value)" 
+                       class="w-20 text-xs font-black text-center bg-white border border-teal-300 rounded-xl py-1.5 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                <input type="range" id="archerFormBowWeightSlider" min="20" max="70" step="1" value="48" 
+                       oninput="syncArcherFormBowWeight(this.value)" 
+                       class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1 pt-0.5">
+            <span class="text-[9px] font-black text-slate-400 mr-1">빠른 선택:</span>
+            <button type="button" onclick="setArcherFormBowWeight(28)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">28#</button>
+            <button type="button" onclick="setArcherFormBowWeight(35)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">35#</button>
+            <button type="button" onclick="setArcherFormBowWeight(42)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">42#</button>
+            <button type="button" onclick="setArcherFormBowWeight(45)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">45#</button>
+            <button type="button" onclick="setArcherFormBowWeight(48)" class="px-2 py-0.5 bg-teal-700 text-white rounded-md text-[10px] font-black">48#</button>
+            <button type="button" onclick="setArcherFormBowWeight(50)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">50#</button>
+            <button type="button" onclick="setArcherFormBowWeight(55)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">55#</button>
+            <button type="button" onclick="setArcherFormBowWeight(60)" class="px-2 py-0.5 bg-white hover:bg-teal-100 border border-slate-200 text-slate-700 rounded-md text-[10px] font-bold">60#</button>
+          </div>
+        </div>
+
+        <!-- 화살 제원: 재질, 중량, 길이 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-black text-slate-800">사용 화살 제원 (재질 · 중량 · 길이) *</label>
+            <span id="archerFormArrowPreview" class="text-[10px] font-black text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
+              카본시 6.5돈 (2자 6.0치)
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 pb-1">
+            <span class="text-[9px] font-bold text-slate-400">화살 추천:</span>
+            <button type="button" onclick="setArcherFormArrowPreset('카본시', '6.5', '2자 6.0치')" class="px-2 py-0.5 bg-white hover:bg-teal-50 border border-teal-200 text-teal-800 rounded-md text-[10px] font-bold shadow-2xs">
+              🏹 카본 6.5돈 (표준)
+            </button>
+            <button type="button" onclick="setArcherFormArrowPreset('전통 죽시', '7.0', '2자 6.5치')" class="px-2 py-0.5 bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 rounded-md text-[10px] font-bold shadow-2xs">
+              🎋 전통 죽시 7.0돈
+            </button>
+            <button type="button" onclick="setArcherFormArrowPreset('개량 죽시', '6.0', '2자 5.5치')" class="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 rounded-md text-[10px] font-bold shadow-2xs">
+              🌾 개량 죽시 6.0돈
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-1">화살 재질</label>
+              <select id="archerFormArrowMaterial" onchange="syncArcherFormArrowPreview()" class="w-full text-xs font-bold bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                <option value="카본시" selected>카본시</option>
+                <option value="전통 죽시">전통 죽시</option>
+                <option value="개량 죽시">개량 죽시</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-black text-amber-600 mb-1">중량</label>
+              <select id="archerFormArrowWeight" onchange="syncArcherFormArrowPreview()" class="w-full text-xs font-black bg-white border border-amber-300 rounded-xl px-2 py-1.5 text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <option value="5.0">5.0돈</option>
+                <option value="5.5">5.5돈</option>
+                <option value="6.0">6.0돈</option>
+                <option value="6.5" selected>6.5돈 (표준)</option>
+                <option value="7.0">7.0돈</option>
+                <option value="7.5">7.5돈</option>
+                <option value="8.0">8.0돈</option>
+                <option value="8.5">8.5돈</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-sky-700 mb-1">길이</label>
+              <select id="archerFormArrowLength" onchange="syncArcherFormArrowPreview()" class="w-full text-xs font-bold bg-white border border-sky-300 rounded-xl px-2 py-1.5 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <option value="2자 5.0치">2자 5.0치</option>
+                <option value="2자 5.5치">2자 5.5치</option>
+                <option value="2자 6.0치" selected>2자 6.0치 (표준)</option>
+                <option value="2자 6.5치">2자 6.5치</option>
+                <option value="2자 7.0치">2자 7.0치</option>
+                <option value="2자 7.5치">2자 7.5치</option>
+                <option value="2자 8.0치">2자 8.0치</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-2">
+          <button type="button" onclick="closeManageArchersModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+            닫기
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black shadow-md shadow-teal-700/20 transition flex items-center justify-center space-x-1.5 active:scale-95">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>궁사 등록 저장 완료</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: 궁사 공인 등록 확인증 (弓士 登錄 確認證) -->
+  <div id="archerConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 hidden">
+    <div class="hanji-paper rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-4 border-amber-600 font-serif text-slate-900 space-y-4 text-center">
+      
+      <div class="border-b-2 border-stone-800 pb-3">
+        <span class="text-xs font-black text-red-700 tracking-widest border border-red-700 px-2 py-0.5 rounded">
+          大韓弓道 認證
+        </span>
+        <h3 class="text-2xl font-black mt-2 tracking-wide">弓士 登錄 確認證</h3>
+        <p class="text-[11px] text-stone-600 mt-0.5">弘益人間 忠孝禮義 射以觀德</p>
+      </div>
+
+      <div class="bg-white/80 border border-stone-300 rounded-2xl p-4 text-left font-sans text-xs space-y-2 shadow-inner">
+        <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
+          <span class="text-stone-500 font-bold">궁사 성명:</span>
+          <span id="confirmModalArcherName" class="text-base font-black text-stone-900">이순신</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
+          <span class="text-stone-500 font-bold">소속 활터:</span>
+          <span id="confirmModalArcherJeong" class="font-black text-teal-900">진안 마이정</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
+          <span class="text-stone-500 font-bold">목표 급·단위:</span>
+          <span id="confirmModalArcherDan" class="font-black text-amber-800">★ 0단 수련궁사 (18중 목표)</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
+          <span class="text-stone-500 font-bold">사용 활 제원:</span>
+          <span id="confirmModalArcherBow" class="font-black text-stone-900">[중궁] 개량궁 48#</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-stone-500 font-bold">사용 화살 제원:</span>
+          <span id="confirmModalArcherArrow" class="font-black text-stone-900">카본시 6.5돈 (2자 6.0치)</span>
+        </div>
+      </div>
+
+      <div class="text-[11px] text-stone-600 font-serif leading-relaxed">
+        위 궁사의 제원이 마이정 사대에 정식 등록되었음을 확인합니다.
+      </div>
+
+      <button onclick="closeArcherConfirmModal()" class="w-full py-3 bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition">
+        확인 완료 · 사대 습사 시작
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Box -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl z-50 text-xs font-bold flex items-center space-x-2 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none">
+    <i data-lucide="info" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toastMessage">알림</span>
+  </div>
+
+  <script>
+    /* Global Archer State */
+    let archers = [
+      { id: 'arch-1', name: '이순신', jeong: '진안 마이정', bowLength: '중궁', bow: '개량궁 48#', arrowMaterial: '카본시', arrowWeight: '6.5', arrowLength: '2자 6.0치', arrow: '카본시 6.5돈 (2자 6.0치)', targetDan: '3단' },
+      { id: 'arch-2', name: '강감찬', jeong: '진안 마이정', bowLength: '장궁', bow: '각궁 50#', arrowMaterial: '전통 죽시', arrowWeight: '7.0', arrowLength: '2자 6.5치', arrow: '전통 죽시 7.0돈 (2자 6.5치)', targetDan: '5단' },
+      { id: 'arch-3', name: '신사임당', jeong: '전주 천양정', bowLength: '단궁', bow: '개량궁 35#', arrowMaterial: '카본시', arrowWeight: '5.5', arrowLength: '2자 5.0치', arrow: '카본시 5.5돈 (2자 5.0치)', targetDan: '0단' },
+      { id: 'arch-4', name: '김유신', jeong: '군산 진남정', bowLength: '중궁', bow: '개량궁 45#', arrowMaterial: '개량 죽시', arrowWeight: '6.0', arrowLength: '2자 5.5치', arrow: '개량 죽시 6.0돈 (2자 5.5치)', targetDan: '1급' }
+    ];
+
+    let currentArcherId = 'arch-1';
+
+    let currentSession = {
+      date: new Date().toISOString().split('T')[0],
+      location: '진안 마이정',
+      mode: 'practice',
+      targetGoal: 28,
+      activeRound: 0,
+      hits: Array.from({ length: 9 }, () => Array(5).fill(null)),
+      missReasons: Array.from({ length: 9 }, () => Array(5).fill('none')),
+      goalCelebrated: false,
+      customMemo: ''
+    };
+
+    let sessionHistory = [
+      {
+        id: 'hist-1',
+        archerId: 'arch-1',
+        archerName: '이순신',
+        bowSpec: '[중궁] 개량궁 48#',
+        arrowSpec: '카본시 6.5돈 (2자 6.0치)',
+        date: '2026-09-20',
+        location: '진안 마이정',
+        mode: 'practice',
+        targetGoal: 26,
+        totalHits: 25,
+        totalArrows: 45,
+        hitRate: 55.6,
+        molgiCount: 1,
+        missReasons: { front: 5, back: 6, short: 6, long: 3 },
+        roundHits: [3, 2, 4, 3, 2, 5, 2, 2, 2],
+        memo: '마이산 골바람에 줌손이 덜 엎혀 앞남 5회 발생. 깍지손 턱밑 밀착 1초 훈련 요망.',
+        weatherText: '진안 마이정: 맑고 쾌청 (19.0°C) · 남서풍 2.0 m/s · 1015 hPa'
+      },
+      {
+        id: 'hist-2',
+        archerId: 'arch-1',
+        archerName: '이순신',
+        bowSpec: '[중궁] 개량궁 48#',
+        arrowSpec: '카본시 6.5돈 (2자 6.0치)',
+        date: '2026-09-28',
+        location: '진안 마이정',
+        mode: 'practice',
+        targetGoal: 28,
+        totalHits: 29,
+        totalArrows: 45,
+        hitRate: 64.4,
+        molgiCount: 2,
+        missReasons: { front: 3, back: 4, short: 6, long: 3 },
+        roundHits: [3, 4, 3, 5, 3, 3, 5, 2, 1],
+        memo: '제4순과 제7순에 5중 몰기 달성. 후반 8~9순 체력 안배 호흡 집중 필요.',
+        weatherText: '진안 마이정: 구름 조금 (20.0°C) · 서풍 1.6 m/s · 1016 hPa'
+      }
+    ];
+
+    const DAN_CRITERIA = [
+      { dan: '0단', hits: 18, rate: '40.0%', note: '수련궁사 / 기초 사법 확립' },
+      { dan: '1급', hits: 22, rate: '48.9%', note: '개정 1급 공인 합격 기준' },
+      { dan: '초단', hits: 24, rate: '53.3%', note: '초단 / 1단 (24시 시작)' },
+      { dan: '2단', hits: 26, rate: '57.8%', note: '2단 기준 (+2중)' },
+      { dan: '3단', hits: 28, rate: '62.2%', note: '3단 기준 (+2중)' },
+      { dan: '4단', hits: 30, rate: '66.7%', note: '4단 기준 (+2중)' },
+      { dan: '5단', hits: 31, rate: '68.9%', note: '5단 명궁 (각궁·죽시, 31중 시작)' },
+      { dan: '6단', hits: 33, rate: '73.3%', note: '6단 기준 (+2중)' },
+      { dan: '7단', hits: 35, rate: '77.8%', note: '7단 기준 (+2중)' },
+      { dan: '8단', hits: 37, rate: '82.2%', note: '8단 기준 (+2중)' },
+      { dan: '9단', hits: 39, rate: '86.7%', note: '9단 최고궁 (+2중)' }
+    ];
+
+    /* Jeonbuk Special Self-Governing Province 20 Archery Ranges Directory */
+    const JEONBUK_RANGES = [
+      { name: '진안 마이정', hanja: '馬耳亭', region: '진안군', desc: '마이산 고원 분지 지형 (해발 350m). 공기 청정, 안정된 기압, 일정한 골바람 형성.' },
+      { name: '전주 천양정', hanja: '千陽亭', region: '전주시', desc: '역사 깊은 전주천변 사정. 하천 미풍과 측풍 영향으로 줌손 받침 중요.' },
+      { name: '군산 진남정', hanja: '鎭南亭', region: '군산시', desc: '서해 연안 해풍 영향 사정. 북서풍 돌풍 대비 오조준 필수.' },
+      { name: '익산 송백정', hanja: '松栢亭', region: '익산시', desc: '송백림으로 둘러싸여 바람이 온화하여 표준 조준선대로 탄착군 형성 유리.' },
+      { name: '익산 건덕정', hanja: '建德亭', region: '익산시', desc: '황등 들녘 평야 지형. 화살 들림 방지를 위해 줌손을 굳게 지지.' },
+      { name: '정읍 필야정', hanja: '必也亭', region: '정읍시', desc: '내장산 자락 온풍 지대. 줌손 밭침을 편안히 뻗어 곧은 살길 확보.' },
+      { name: '정읍 함벽정', hanja: '涵碧亭', region: '정읍시 태인', desc: '피향정 기운으로 맑고 정갈한 사대 환경, 흑심 정조준 유효.' },
+      { name: '남원 관덕정', hanja: '觀德亭', region: '남원시', desc: '요천변의 잔잔한 바람세. 깍지손 떼기를 정갈하게 유지.' },
+      { name: '남원 황산정', hanja: '荒山亭', region: '남원시 운봉', desc: '지리산 운봉 고원(해발 470m). 공기 저항이 커 완전 만작 깊이 확보 요망.' },
+      { name: '김제 홍심정', hanja: '紅心亭', region: '김제시', desc: '만경평야 지평선 서풍 지대. 과녁 뒤쪽 반 뼘 오조준 권장.' },
+      { name: '김제 금만정', hanja: '金萬亭', region: '김제시', desc: '평야 바람을 뚫기 위해 줌손 엄지뿌리를 과녁에 깊게 지지.' },
+      { name: '장수 벽계정', hanja: '碧溪亭', region: '장수군', desc: '장수 청정 고원(해발 430m). 흑심 상단 3cm 포물선 보정.' },
+      { name: '임실 군자정', hanja: '君子亭', region: '임실군', desc: '섬진강 상류 기운으로 기압이 안정되어 호흡 가다듬기에 최적.' },
+      { name: '임실 오수득가정', hanja: '得稼亭', region: '임실군 오수', desc: '오수천변 순풍 지형. 뒤손 깍지를 과감히 떼어 비거리 유지.' },
+      { name: '순창 육일정', hanja: '六一亭', region: '순창군', desc: '회문산과 강천산이 둘러싸여 바람이 온순. 5중 몰기 도전 유리.' },
+      { name: '고창 모양정', hanja: '牟陽亭', region: '고창군', desc: '고창읍성 정기. 시계가 맑고 깨끗하여 줌손 밀기에 전념.' },
+      { name: '고창 초파정', hanja: '醮波亭', region: '고창군 해리', desc: '해리면 해안선 기류. 깍지손을 급히 떼지 말고 턱밑 1초 유지.' },
+      { name: '고창 장사정', hanja: '長沙亭', region: '고창군 상하', desc: '상하면 갯바람이 부는 사정. 가벼운 화살은 넉넉한 오조준 필요.' },
+      { name: '고창 선운정', hanja: '禪雲亭', region: '고창군 신림', desc: '선운산 자락 온화한 기후로 포물선 궤적이 균일하게 형성.' },
+      { name: '부안 심고정', hanja: '深古亭', region: '부안군', desc: '변산반도 해풍 영향. 화살이 앞(좌측)으로 새지 않도록 우측 보정.' }
+    ];
+
+    let audioEnabled = true;
+    let audioCtx = null;
+    let chartTrendInstance = null;
+    let chartMissInstance = null;
+    let chartPacingInstance = null;
+
+    let adviceBowLength = '중궁';
+    let adviceArrowMaterial = '카본시';
+    let adviceArrowWeight = '6.5';
+    let adviceArrowLength = '2자 6.0치';
+
+    /* Initialize App */
+    window.addEventListener('load', () => {
+      initApp();
+    });
+
+    function initApp() {
+      const dateInput = document.getElementById('sessionDate');
+      if (dateInput) dateInput.value = currentSession.date;
+
+      loadArchersFromStorage();
+      loadHistoryFromStorage();
+      populateRangeDropdowns();
+      renderJeonbukDirectory();
+      updateArcherUI();
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      onLocationChange(currentSession.location);
+      updateLiveCoachRealtime();
+      populateHistoryFilterOptions();
+      renderHistoryList();
+      lucide.createIcons();
+    }
+
+    function getCurrentArcher() {
+      return archers.find(a => a.id === currentArcherId) || archers[0];
+    }
+
+    /* Compute Date and Range Aware Weather */
+    function getDynamicWeather(location, dateStr) {
+      const d = dateStr ? new Date(dateStr) : new Date();
+      const month = d.getMonth() + 1; // 1~12
+
+      let season = '가을';
+      let baseTemp = 18;
+      let basePressure = 1016;
+      let baseWindSpeed = 1.8;
+      let baseWindDir = '남서풍';
+
+      if (month >= 3 && month <= 5) {
+        season = '봄';
+        baseTemp = 15;
+        basePressure = 1014;
+        baseWindSpeed = 2.4;
+        baseWindDir = '서풍';
+      } else if (month >= 6 && month <= 8) {
+        season = '여름';
+        baseTemp = 28;
+        basePressure = 1008;
+        baseWindSpeed = 1.5;
+        baseWindDir = '남동풍';
+      } else if (month >= 9 && month <= 11) {
+        season = '가을';
+        baseTemp = 18;
+        basePressure = 1016;
+        baseWindSpeed = 1.8;
+        baseWindDir = '남서풍';
+      } else {
+        season = '겨울';
+        baseTemp = 2;
+        basePressure = 1024;
+        baseWindSpeed = 3.2;
+        baseWindDir = '북서풍';
+      }
+
+      // Range specifics adjustments
+      if (location.includes('군산') || location.includes('부안') || location.includes('장사정') || location.includes('초파정')) {
+        baseWindSpeed += 1.2;
+        baseWindDir = '북서풍';
+      } else if (location.includes('진안') || location.includes('황산정') || location.includes('장수')) {
+        baseTemp -= 2.5;
+        basePressure += 2;
+      }
+
+      const cond = season === '여름' ? '구름 조금' : (season === '겨울' ? '맑고 쌀쌀함' : '맑고 쾌청');
+      const tip = `${basePressure} hPa, ${baseWindDir} ${baseWindSpeed.toFixed(1)} m/s: 안정된 포물선 탄도. 흑심을 편안히 겨냥하십시오.`;
+
+      return {
+        season,
+        cond,
+        temp: `${baseTemp.toFixed(1)}°C`,
+        wind: `${baseWindDir} ${baseWindSpeed.toFixed(1)} m/s`,
+        pressure: `${basePressure} hPa`,
+        tip
+      };
+    }
+
+    function onSessionDateChange(val) {
+      currentSession.date = val;
+      onLocationChange(currentSession.location);
+    }
+
+    function populateRangeDropdowns() {
+      const sessionSelect = document.getElementById('sessionLocation');
+      const adviceSelect = document.getElementById('adviceLocationSelect');
+
+      const jeonbukOptions = JEONBUK_RANGES.map(r => `
+        <option value="${r.name}" ${r.name === '진안 마이정' ? 'selected' : ''}>★ ${r.name} (${r.hanja}) - ${r.region}</option>
+      `).join('');
+
+      const otherOptions = `
+        <optgroup label="전국 대표 활터">
+          <option value="서울 황학정">서울 사직동 황학정</option>
+          <option value="서울 석호정">서울 남산 석호정</option>
+          <option value="대전 대동정">대전 중구 대동정</option>
+          <option value="대구 관덕정">대구 두류 관덕정</option>
+          <option value="광주 송무정">광주 서구 송무정</option>
+          <option value="부산 사직정">부산 동래 사직정</option>
+        </optgroup>
+      `;
+
+      const fullHtml = `
+        <optgroup label="전북특별자치도 20개 사정">
+          ${jeonbukOptions}
+        </optgroup>
+        ${otherOptions}
+      `;
+
+      if (sessionSelect) sessionSelect.innerHTML = fullHtml;
+      if (adviceSelect) adviceSelect.innerHTML = fullHtml;
+    }
+
+    function renderJeonbukDirectory() {
+      const grid = document.getElementById('jeonbukRangesGrid');
+      if (!grid) return;
+
+      grid.innerHTML = JEONBUK_RANGES.map((r, i) => `
+        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-clay flex flex-col justify-between hover:border-teal-500 transition">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-black text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full">${r.region}</span>
+              <span class="text-[11px] font-bold text-slate-400">사정 #${i + 1}</span>
+            </div>
+            <h3 class="text-base font-black text-slate-900">${r.name} <span class="text-xs text-slate-500 font-serif font-bold">(${r.hanja})</span></h3>
+            <p class="text-xs text-slate-600 font-bold mt-1.5 leading-relaxed">${r.desc}</p>
+          </div>
+          <button onclick="applyJeonbukRangeToSession('${r.name}')" class="mt-4 w-full py-2 bg-slate-100 hover:bg-teal-700 hover:text-white text-slate-800 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span>사대 활터로 적용</span>
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function applyJeonbukRangeToSession(rangeName) {
+      currentSession.location = rangeName;
+      const sSelect = document.getElementById('sessionLocation');
+      if (sSelect) sSelect.value = rangeName;
+      onLocationChange(rangeName);
+      switchTab('shoot');
+      showToast(`'${rangeName}' 사정으로 활터가 설정되었습니다.`);
+    }
+
+    /* Archer Management & UI Sync */
+    function updateArcherUI() {
+      const archer = getCurrentArcher();
+      if (!archer) return;
+
+      const navAvatar = document.getElementById('navArcherAvatar');
+      if (navAvatar) navAvatar.textContent = archer.name.charAt(0);
+
+      const navName = document.getElementById('navArcherName');
+      if (navName) navName.textContent = archer.name;
+
+      const navTargetDan = document.getElementById('navArcherTargetDan');
+      if (navTargetDan) navTargetDan.textContent = `${archer.targetDan} 도전`;
+
+      const navDetails = document.getElementById('navArcherDetails');
+      if (navDetails) {
+        navDetails.textContent = `[${archer.bowLength || '중궁'}] ${archer.bow} · ${archer.arrow || '카본 6.5돈'}`;
+      }
+
+      // Card Details in View 1
+      const cardName = document.getElementById('activeArcherCardName');
+      if (cardName) cardName.textContent = archer.name;
+
+      const cardDan = document.getElementById('activeArcherCardDan');
+      if (cardDan) {
+        const crit = DAN_CRITERIA.find(d => d.dan === archer.targetDan);
+        cardDan.textContent = `${archer.targetDan} (${crit ? crit.hits + '중' : '18중'})`;
+      }
+
+      const cardJeong = document.getElementById('activeArcherCardJeong');
+      if (cardJeong) cardJeong.textContent = `· ${archer.jeong}`;
+
+      const cardBow = document.getElementById('activeArcherBowSpec');
+      if (cardBow) cardBow.textContent = `[${archer.bowLength || '중궁'}] ${archer.bow}`;
+
+      const cardArrow = document.getElementById('activeArcherArrowSpec');
+      if (cardArrow) cardArrow.textContent = archer.arrow;
+
+      const cardGoal = document.getElementById('activeArcherGoalSpec');
+      if (cardGoal) {
+        const crit = DAN_CRITERIA.find(d => d.dan === archer.targetDan);
+        cardGoal.textContent = `${archer.targetDan} (${crit ? crit.hits + '중/45시' : '18중'})`;
+      }
+
+      const cardDrill = document.getElementById('activeArcherDrillSpec');
+      if (cardDrill) {
+        if (archer.targetDan === '0단') cardDrill.textContent = '비정비팔 발디딤 & 흉허복실';
+        else if (archer.targetDan === '5단') cardDrill.textContent = '각궁·죽시 민감도 제어';
+        else cardDrill.textContent = '턱밑 깍지 1초 밀착 유지';
+      }
+
+      // Advice Bar Sync
+      adviceBowLength = archer.bowLength || '중궁';
+      setAdviceBowLength(adviceBowLength, false);
+
+      const customBowInput = document.getElementById('adviceBowCustomInput');
+      if (customBowInput) customBowInput.value = archer.bow;
+
+      adviceArrowMaterial = archer.arrowMaterial || '카본시';
+      adviceArrowWeight = archer.arrowWeight || '6.5';
+      adviceArrowLength = archer.arrowLength || '2자 6.0치';
+
+      const matSel = document.getElementById('adviceArrowMaterialSelect');
+      const wtSel = document.getElementById('adviceArrowWeightSelect');
+      const lenSel = document.getElementById('adviceArrowLengthSelect');
+      if (matSel) matSel.value = adviceArrowMaterial;
+      if (wtSel) wtSel.value = adviceArrowWeight;
+      if (lenSel) lenSel.value = adviceArrowLength;
+
+      updateAdviceArrowDescription();
+      renderArchersCardGrid();
+      populateHistoryFilterOptions();
+    }
+
+    function openManageArchersModal(mode = 'new') {
+      const modal = document.getElementById('manageArcherModal');
+      const title = document.getElementById('archerModalTitle');
+      const formId = document.getElementById('archerFormId');
+      const formName = document.getElementById('archerFormName');
+      const formJeong = document.getElementById('archerFormJeong');
+      const formDan = document.getElementById('archerFormTargetDan');
+
+      if (mode === 'edit') {
+        const cur = getCurrentArcher();
+        title.textContent = '궁사 정보 수정';
+        formId.value = cur.id;
+        formName.value = cur.name;
+        formJeong.value = cur.jeong;
+        formDan.value = cur.targetDan || '3단';
+
+        // Parse bow type and weight
+        let bType = '개량궁';
+        let bWeight = 48;
+        if (cur.bow.includes('각궁')) bType = '각궁';
+        else if (cur.bow.includes('카본궁')) bType = '카본궁';
+        else if (cur.bow.includes('연무궁')) bType = '연무궁';
+
+        const match = cur.bow.match(/(\d+)\s*#/);
+        if (match) bWeight = parseInt(match[1], 10);
+
+        const bTypeSelect = document.getElementById('archerFormBowType');
+        if (bTypeSelect) bTypeSelect.value = bType;
+        setArcherFormBowWeight(bWeight);
+
+        const radios = document.getElementsByName('archerFormBowLength');
+        for (const r of radios) {
+          if (r.value === (cur.bowLength || '중궁')) r.checked = true;
+        }
+
+        const matSelect = document.getElementById('archerFormArrowMaterial');
+        const wtSelect = document.getElementById('archerFormArrowWeight');
+        const lenSelect = document.getElementById('archerFormArrowLength');
+
+        if (matSelect) matSelect.value = cur.arrowMaterial || '카본시';
+        if (wtSelect) wtSelect.value = cur.arrowWeight || '6.5';
+        if (lenSelect) lenSelect.value = cur.arrowLength || '2자 6.0치';
+      } else {
+        title.textContent = '신규 궁사 등록 (0단~)';
+        formId.value = '';
+        formName.value = '';
+        formJeong.value = '진안 마이정';
+        formDan.value = '0단';
+
+        const bTypeSelect = document.getElementById('archerFormBowType');
+        if (bTypeSelect) bTypeSelect.value = '개량궁';
+        setArcherFormBowWeight(48);
+
+        const radios = document.getElementsByName('archerFormBowLength');
+        for (const r of radios) {
+          if (r.value === '중궁') r.checked = true;
+        }
+
+        const matSelect = document.getElementById('archerFormArrowMaterial');
+        const wtSelect = document.getElementById('archerFormArrowWeight');
+        const lenSelect = document.getElementById('archerFormArrowLength');
+
+        if (matSelect) matSelect.value = '카본시';
+        if (wtSelect) wtSelect.value = '6.5';
+        if (lenSelect) lenSelect.value = '2자 6.0치';
+      }
+
+      syncArcherFormBowPreview();
+      syncArcherFormArrowPreview();
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeManageArchersModal() {
+      const modal = document.getElementById('manageArcherModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function syncArcherFormBowWeight(val) {
+      let weight = parseInt(val, 10);
+      if (isNaN(weight)) weight = 48;
+      if (weight < 20) weight = 20;
+      if (weight > 70) weight = 70;
+
+      const numInput = document.getElementById('archerFormBowWeightNumber');
+      const slider = document.getElementById('archerFormBowWeightSlider');
+      const display = document.getElementById('archerFormBowWeightDisplay');
+
+      if (numInput && numInput.value != weight) numInput.value = weight;
+      if (slider && slider.value != weight) slider.value = weight;
+      if (display) display.textContent = `${weight}#`;
+
+      syncArcherFormBowPreview();
+    }
+
+    function setArcherFormBowWeight(val) {
+      syncArcherFormBowWeight(val);
+    }
+
+    function syncArcherFormBowPreview() {
+      const type = document.getElementById('archerFormBowType')?.value || '개량궁';
+      const weight = document.getElementById('archerFormBowWeightNumber')?.value || 48;
+      let bowLength = '중궁';
+      const radios = document.getElementsByName('archerFormBowLength');
+      for (const r of radios) {
+        if (r.checked) { bowLength = r.value; break; }
+      }
+
+      const preview = document.getElementById('archerFormBowPreview');
+      if (preview) preview.textContent = `[${bowLength}] ${type} ${weight}#`;
+    }
+
+    function syncArcherFormArrowPreview() {
+      const mat = document.getElementById('archerFormArrowMaterial')?.value || '카본시';
+      const wt = document.getElementById('archerFormArrowWeight')?.value || '6.5';
+      const len = document.getElementById('archerFormArrowLength')?.value || '2자 6.0치';
+      const preview = document.getElementById('archerFormArrowPreview');
+      if (preview) preview.textContent = `${mat} ${wt}돈 (${len})`;
+    }
+
+    function setArcherFormArrowPreset(material, weight, length) {
+      const matSelect = document.getElementById('archerFormArrowMaterial');
+      const wtSelect = document.getElementById('archerFormArrowWeight');
+      const lenSelect = document.getElementById('archerFormArrowLength');
+
+      if (matSelect) matSelect.value = material;
+      if (wtSelect) wtSelect.value = weight;
+      if (lenSelect) lenSelect.value = length;
+      syncArcherFormArrowPreview();
+    }
+
+    function handleArcherFormSubmit(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      try {
+        const id = document.getElementById('archerFormId')?.value || '';
+        const name = (document.getElementById('archerFormName')?.value || '').trim();
+        const jeong = (document.getElementById('archerFormJeong')?.value || '').trim();
+        const targetDan = document.getElementById('archerFormTargetDan')?.value || '0단';
+
+        let bowLength = '중궁';
+        const radios = document.getElementsByName('archerFormBowLength');
+        for (const r of radios) {
+          if (r.checked) { bowLength = r.value; break; }
+        }
+
+        const bowType = document.getElementById('archerFormBowType')?.value || '개량궁';
+        let bowWeight = parseInt(document.getElementById('archerFormBowWeightNumber')?.value || 48, 10);
+        if (isNaN(bowWeight) || bowWeight < 20) bowWeight = 20;
+        if (bowWeight > 70) bowWeight = 70;
+        const bow = `${bowType} ${bowWeight}#`;
+
+        const mat = document.getElementById('archerFormArrowMaterial')?.value || '카본시';
+        const wt = document.getElementById('archerFormArrowWeight')?.value || '6.5';
+        const len = document.getElementById('archerFormArrowLength')?.value || '2자 6.0치';
+        const arrow = `${mat} ${wt}돈 (${len})`;
+
+        if (!name) {
+          showToast('궁사 성명을 입력해 주십시오.');
+          return false;
+        }
+
+        let savedId = id;
+        if (id && archers.some(a => a.id === id)) {
+          const idx = archers.findIndex(a => a.id === id);
+          if (idx !== -1) {
+            archers[idx] = { id, name, jeong, bowLength, bow, arrow, arrowMaterial: mat, arrowWeight: wt, arrowLength: len, targetDan };
+          }
+        } else {
+          savedId = 'arch-' + Date.now();
+          archers.push({ id: savedId, name, jeong, bowLength, bow, arrow, arrowMaterial: mat, arrowWeight: wt, arrowLength: len, targetDan });
+        }
+
+        currentArcherId = savedId;
+        saveArchersToStorage();
+
+        // Update All Views
+        updateArcherUI();
+        renderArchersCardGrid();
+        renderRoundTabButtons();
+        renderActiveRoundArrows();
+        renderMatrixTable();
+        updateSessionMetrics();
+        renderAdviceView();
+        updateLiveCoachRealtime();
+
+        closeManageArchersModal();
+        openArcherConfirmModal(savedId);
+
+        showToast(`'${name}' 궁사 [${bowLength} ${bow}] 등록 완료!`);
+        return true;
+      } catch (err) {
+        console.error('Archer registration error:', err);
+        showToast('저장 중 일시적 오류가 발생했습니다.');
+        return false;
+      }
+    }
+
+    function openArcherConfirmModal(archerId) {
+      const archer = archers.find(a => a.id === archerId) || getCurrentArcher();
+      if (!archer) return;
+
+      const nameEl = document.getElementById('confirmModalArcherName');
+      const jeongEl = document.getElementById('confirmModalArcherJeong');
+      const danEl = document.getElementById('confirmModalArcherDan');
+      const bowEl = document.getElementById('confirmModalArcherBow');
+      const arrowEl = document.getElementById('confirmModalArcherArrow');
+
+      const crit = DAN_CRITERIA.find(d => d.dan === archer.targetDan);
+      const hitsTxt = crit ? `${crit.hits}중 합격` : '18중 목표';
+
+      if (nameEl) nameEl.textContent = archer.name;
+      if (jeongEl) jeongEl.textContent = archer.jeong;
+      if (danEl) danEl.textContent = `${archer.targetDan} (${hitsTxt})`;
+      if (bowEl) bowEl.textContent = `[${archer.bowLength || '중궁'}] ${archer.bow}`;
+      if (arrowEl) arrowEl.textContent = archer.arrow;
+
+      const modal = document.getElementById('archerConfirmModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeArcherConfirmModal() {
+      const modal = document.getElementById('archerConfirmModal');
+      if (modal) modal.classList.add('hidden');
+      switchTab('shoot');
+    }
+
+    function renderArchersCardGrid() {
+      const grid = document.getElementById('archersCardGrid');
+      const countEl = document.getElementById('archersCountDisplay');
+      if (!grid) return;
+      if (countEl) countEl.textContent = archers.length;
+
+      grid.innerHTML = archers.map(a => {
+        const isCurrent = a.id === currentArcherId;
+        const crit = DAN_CRITERIA.find(d => d.dan === a.targetDan);
+        const hitsTxt = crit ? `${crit.hits}중` : '18중';
+
+        return `
+          <div class="bg-white rounded-3xl p-5 border-2 ${isCurrent ? 'border-teal-500 shadow-md ring-2 ring-teal-500/20' : 'border-slate-200 shadow-clay'} flex flex-col justify-between transition">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black ${isCurrent ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-700'}">
+                  ${isCurrent ? '현재 사대 출전' : a.targetDan + ' (' + hitsTxt + ')'}
+                </span>
+                <span class="text-xs font-black text-teal-800">${a.targetDan}</span>
+              </div>
+              <div class="flex items-center space-x-3 mb-3">
+                <div class="w-12 h-12 rounded-2xl ${isCurrent ? 'bg-gradient-to-tr from-teal-700 to-emerald-600 text-white' : 'bg-slate-100 text-slate-700'} flex items-center justify-center font-black text-base shadow-xs">
+                  ${a.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 class="text-base font-black text-slate-900">${a.name}</h3>
+                  <p class="text-xs font-bold text-slate-500">${a.jeong}</p>
+                </div>
+              </div>
+              <div class="bg-slate-50 rounded-2xl p-3 text-xs text-slate-700 font-bold mb-4 space-y-1">
+                <div><span class="text-slate-400">활(弓):</span> <strong class="text-teal-900">[${a.bowLength || '중궁'}]</strong> ${a.bow}</div>
+                <div><span class="text-slate-400">화살(矢):</span> ${a.arrow || '카본시 6.5돈'}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
+              ${isCurrent ? `
+                <button disabled class="flex-1 py-2 bg-teal-50 text-teal-800 font-black rounded-xl text-xs flex items-center justify-center space-x-1">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                  <span>출전 중</span>
+                </button>
+              ` : `
+                <button onclick="selectArcher('${a.id}')" class="flex-1 py-2 bg-slate-100 hover:bg-teal-700 hover:text-white text-slate-700 font-black rounded-xl text-xs transition">
+                  사수 출전
+                </button>
+              `}
+              <button onclick="openArcherConfirmModal('${a.id}')" class="p-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-slate-600 transition" title="등록 확인증">
+                <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="selectArcher('${a.id}'); openManageArchersModal('edit');" class="p-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-slate-600 transition" title="수정">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="deleteArcher('${a.id}')" class="p-2 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-slate-400 transition" title="삭제">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function selectArcher(id) {
+      if (!archers.some(a => a.id === id)) return;
+      currentArcherId = id;
+      saveArchersToStorage();
+      updateArcherUI();
+      
+      const archer = getCurrentArcher();
+      showToast(`'${archer.name}' 궁사의 사대로 전환되었습니다.`);
+
+      const targetMap = { '0단': 18, '1급': 22, '초단': 24, '2단': 26, '3단': 28, '4단': 30, '5단': 31, '6단': 33, '7단': 35, '8단': 37, '9단': 39 };
+      if (targetMap[archer.targetDan]) {
+        updateTargetGoal(targetMap[archer.targetDan]);
+        const slider = document.getElementById('targetGoalSlider');
+        if (slider) slider.value = targetMap[archer.targetDan];
+      }
+
+      renderAdviceView();
+      updateLiveCoachRealtime();
+    }
+
+    function deleteArcher(id) {
+      if (archers.length <= 1) {
+        showToast('최소 한 명의 궁사는 등록되어 있어야 합니다.');
+        return;
+      }
+      const target = archers.find(a => a.id === id);
+      if (!target) return;
+
+      archers = archers.filter(a => a.id !== id);
+      if (currentArcherId === id) currentArcherId = archers[0].id;
+
+      saveArchersToStorage();
+      updateArcherUI();
+      showToast(`'${target.name}' 사수가 삭제되었습니다.`);
+    }
+
+    function loadArchersFromStorage() {
+      try {
+        const saved = localStorage.getItem('kg_archers_roster_v3');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) archers = parsed;
+        }
+        const savedId = localStorage.getItem('kg_current_archer_id_v3');
+        if (savedId && archers.some(a => a.id === savedId)) currentArcherId = savedId;
+      } catch (e) {
+        console.debug('Archer storage load fallback', e);
+      }
+    }
+
+    function saveArchersToStorage() {
+      try {
+        localStorage.setItem('kg_archers_roster_v3', JSON.stringify(archers));
+        localStorage.setItem('kg_current_archer_id_v3', currentArcherId);
+      } catch (e) {
+        console.debug('Archer storage save fallback', e);
+      }
+    }
+
+    /* Shooting Lane Interactive Logic */
+    function renderRoundTabButtons() {
+      const container = document.getElementById('roundTabButtons');
+      if (!container) return;
+
+      container.innerHTML = Array.from({ length: 9 }).map((_, idx) => {
+        const roundHits = currentSession.hits[idx].filter(h => h === true).length;
+        const roundShots = currentSession.hits[idx].filter(h => h !== null).length;
+        const isCurrent = currentSession.activeRound === idx;
+        const isMolgi = roundHits === 5;
+
+        return `
+          <button onclick="setActiveRound(${idx})" 
+                  class="px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center space-x-1 whitespace-nowrap
+                         ${isCurrent ? 'bg-teal-700 text-white shadow-xs ring-2 ring-teal-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            <span>${idx + 1}순</span>
+            ${isMolgi ? '<span class="text-amber-300">★</span>' : ''}
+            <span class="text-[10px] opacity-80">(${roundHits}/${roundShots})</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setActiveRound(roundIdx) {
+      if (roundIdx < 0 || roundIdx >= 9) return;
+      currentSession.activeRound = roundIdx;
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      updateLiveCoachRealtime();
+    }
+
+    function navRound(delta) {
+      setActiveRound(currentSession.activeRound + delta);
+    }
+
+    function renderActiveRoundArrows() {
+      const rIdx = currentSession.activeRound;
+      
+      const title = document.getElementById('activeRoundTitle');
+      if (title) title.textContent = `제 ${rIdx + 1}순 습사대`;
+
+      const numBadge = document.getElementById('activeRoundNumberBadge');
+      if (numBadge) numBadge.textContent = rIdx + 1;
+
+      const hitsCount = currentSession.hits[rIdx].filter(h => h === true).length;
+      const molgiBadge = document.getElementById('activeRoundMolgiBadge');
+      if (molgiBadge) {
+        if (hitsCount === 5) molgiBadge.classList.remove('hidden');
+        else molgiBadge.classList.add('hidden');
+      }
+
+      const activeRoundHits = document.getElementById('activeRoundHitsDisplay');
+      if (activeRoundHits) activeRoundHits.textContent = hitsCount;
+
+      let cumulative = 0;
+      for (let i = 0; i <= rIdx; i++) {
+        cumulative += currentSession.hits[i].filter(h => h === true).length;
+      }
+      const cumulativeEl = document.getElementById('activeCumulativeHitsDisplay');
+      if (cumulativeEl) cumulativeEl.textContent = cumulative;
+
+      let rFront = 0, rBack = 0, rShort = 0, rLong = 0;
+      for (let a = 0; a < 5; a++) {
+        if (currentSession.hits[rIdx][a] === false) {
+          const res = currentSession.missReasons[rIdx][a];
+          if (res === 'front') rFront++;
+          else if (res === 'back') rBack++;
+          else if (res === 'short') rShort++;
+          else if (res === 'long') rLong++;
+        }
+      }
+      const bFront = document.getElementById('badgeRoundMissFront');
+      const bBack = document.getElementById('badgeRoundMissBack');
+      const bShort = document.getElementById('badgeRoundMissShort');
+      const bLong = document.getElementById('badgeRoundMissLong');
+      if (bFront) bFront.textContent = `앞 ${rFront}`;
+      if (bBack) bBack.textContent = `뒤 ${rBack}`;
+      if (bShort) bShort.textContent = `단 ${rShort}`;
+      if (bLong) bLong.textContent = `장 ${rLong}`;
+
+      const grid = document.getElementById('arrowCardsGrid');
+      if (!grid) return;
+
+      const arrowNames = ['초시 (1)', '이시 (2)', '삼시 (3)', '사시 (4)', '오시 (5)'];
+
+      grid.innerHTML = Array.from({ length: 5 }).map((_, aIdx) => {
+        const val = currentSession.hits[rIdx][aIdx];
+        const reason = currentSession.missReasons[rIdx][aIdx];
+
+        const isHit = val === true;
+        const isMissFront = val === false && reason === 'front';
+        const isMissBack = val === false && reason === 'back';
+        const isMissShort = val === false && reason === 'short';
+        const isMissLong = val === false && reason === 'long';
+
+        let cardBorderCls = 'border-slate-200 bg-white shadow-xs';
+        let statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500">대기 중</span>';
+        let bigCircleVisual = `<div class="w-14 h-14 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 font-black text-xl">-</div>`;
+
+        if (isHit) {
+          cardBorderCls = 'border-emerald-500 bg-emerald-50/40 shadow-glow-hit ring-2 ring-emerald-400/50 animate-pop-hit';
+          statusBadge = '<span class="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-500 text-white shadow-xs">★ 관중 (貫中)</span>';
+          bigCircleVisual = `
+            <div class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-emerald-500/30 ring-4 ring-emerald-200">
+              ○
+            </div>
+          `;
+        } else if (val === false) {
+          if (isMissFront) {
+            cardBorderCls = 'border-rose-400 bg-rose-50/40 shadow-xs';
+            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">불관 · 앞남 (前)</span>';
+            bigCircleVisual = `<div class="w-14 h-14 rounded-full bg-rose-100 border-2 border-rose-400 text-rose-700 flex items-center justify-center font-black text-xl">앞</div>`;
+          } else if (isMissBack) {
+            cardBorderCls = 'border-amber-400 bg-amber-50/40 shadow-xs';
+            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900">불관 · 뒤남 (後)</span>';
+            bigCircleVisual = `<div class="w-14 h-14 rounded-full bg-amber-100 border-2 border-amber-400 text-amber-800 flex items-center justify-center font-black text-xl">뒤</div>`;
+          } else if (isMissShort) {
+            cardBorderCls = 'border-sky-400 bg-sky-50/40 shadow-xs';
+            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800">불관 · 거리부족 (短)</span>';
+            bigCircleVisual = `<div class="w-14 h-14 rounded-full bg-sky-100 border-2 border-sky-400 text-sky-700 flex items-center justify-center font-black text-xl">단</div>`;
+          } else if (isMissLong) {
+            cardBorderCls = 'border-purple-400 bg-purple-50/40 shadow-xs';
+            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800">불관 · 거리초과 (長)</span>';
+            bigCircleVisual = `<div class="w-14 h-14 rounded-full bg-purple-100 border-2 border-purple-400 text-purple-700 flex items-center justify-center font-black text-xl">장</div>`;
+          }
+        }
+
+        return `
+          <div class="rounded-3xl border-2 ${cardBorderCls} p-3.5 flex flex-col justify-between transition-all">
+            
+            <div class="flex items-center justify-between pb-2 mb-1 border-b border-slate-100">
+              <span class="text-xs font-black text-slate-800">${arrowNames[aIdx]}</span>
+              ${statusBadge}
+            </div>
+
+            <div class="flex items-center justify-center my-2">
+              ${bigCircleVisual}
+            </div>
+
+            <div class="space-y-2 mt-1">
+              <button onclick="recordArrowDirect(${aIdx}, true, 'none')" 
+                      class="w-full py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center space-x-2 active:scale-95 shadow-xs
+                             ${isHit 
+                               ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 shadow-md shadow-emerald-600/30' 
+                               : 'bg-emerald-500 hover:bg-emerald-600 text-white'}">
+                <span class="text-xl leading-none font-black">○</span>
+                <span class="tracking-wide">관중 (貫中)</span>
+              </button>
+
+              <div class="space-y-1">
+                <div class="text-[10px] font-black text-slate-400 text-center uppercase tracking-wider">
+                  불관 원인 선택
+                </div>
+                
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button onclick="recordArrowDirect(${aIdx}, false, 'front')" 
+                          class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
+                                 ${isMissFront ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200'}">
+                    <span>← 앞</span>
+                    <span class="text-[9px] opacity-80">(앞남)</span>
+                  </button>
+
+                  <button onclick="recordArrowDirect(${aIdx}, false, 'back')" 
+                          class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
+                                 ${isMissBack ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'}">
+                    <span>뒤 →</span>
+                    <span class="text-[9px] opacity-80">(뒤남)</span>
+                  </button>
+
+                  <button onclick="recordArrowDirect(${aIdx}, false, 'short')" 
+                          class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
+                                 ${isMissShort ? 'bg-sky-600 text-white shadow-xs' : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200'}">
+                    <span>↓ 단</span>
+                    <span class="text-[9px] opacity-80">(부족)</span>
+                  </button>
+
+                  <button onclick="recordArrowDirect(${aIdx}, false, 'long')" 
+                          class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
+                                 ${isMissLong ? 'bg-purple-600 text-white shadow-xs' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200'}">
+                    <span>↑ 장</span>
+                    <span class="text-[9px] opacity-80">(초과)</span>
+                  </button>
+                </div>
+
+                ${val !== null ? `
+                  <button onclick="resetSingleArrow(${aIdx})" class="w-full mt-1.5 py-1 text-[10px] font-bold text-slate-400 hover:text-rose-600 transition text-center">
+                    입력 지우기
+                  </button>
+                ` : ''}
+              </div>
+
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      const btnPrev = document.getElementById('btnPrevRound');
+      const btnNext = document.getElementById('btnNextRound');
+      if (btnPrev) btnPrev.disabled = rIdx === 0;
+      if (btnNext) btnNext.disabled = rIdx === 8;
+    }
+
+    function recordArrowDirect(arrowIdx, isHit, missReason = 'none') {
+      const rIdx = currentSession.activeRound;
+      currentSession.hits[rIdx][arrowIdx] = isHit;
+      currentSession.missReasons[rIdx][arrowIdx] = isHit ? 'none' : missReason;
+
+      if (isHit) {
+        playSound('hit');
+        checkMolgi(rIdx);
+      } else {
+        playSound('miss');
+      }
+
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      updateLiveCoachRealtime(rIdx, arrowIdx, isHit, missReason);
+    }
+
+    function resetSingleArrow(arrowIdx) {
+      const rIdx = currentSession.activeRound;
+      currentSession.hits[rIdx][arrowIdx] = null;
+      currentSession.missReasons[rIdx][arrowIdx] = 'none';
+
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      updateLiveCoachRealtime();
+    }
+
+    function fillActiveRound(allHit = true) {
+      const rIdx = currentSession.activeRound;
+      for (let i = 0; i < 5; i++) {
+        currentSession.hits[rIdx][i] = allHit;
+        currentSession.missReasons[rIdx][i] = 'none';
+      }
+      if (allHit) {
+        playSound('molgi');
+        triggerConfetti(0.5);
+        showToast(`제 ${rIdx + 1}순 5중 몰기(沒技)를 달성하셨습니다! 🎯`);
+      }
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      updateLiveCoachRealtime();
+    }
+
+    function clearActiveRound() {
+      const rIdx = currentSession.activeRound;
+      for (let i = 0; i < 5; i++) {
+        currentSession.hits[rIdx][i] = null;
+        currentSession.missReasons[rIdx][i] = 'none';
+      }
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      updateLiveCoachRealtime();
+    }
+
+    function checkMolgi(rIdx) {
+      const roundHits = currentSession.hits[rIdx].filter(h => h === true).length;
+      if (roundHits === 5) {
+        playSound('molgi');
+        triggerConfetti(0.7);
+        showToast(`★ 제 ${rIdx + 1}순 5중 몰기(沒技) 달성을 축하합니다! 🎯`);
+      }
+    }
+
+    function updateLiveCoachRealtime(rIdx = currentSession.activeRound, arrowIdx = -1, isHit = null, missReason = 'none') {
+      const tagEl = document.getElementById('liveCoachArrowTag');
+      const textEl = document.getElementById('liveCoachAdviceText');
+      const envMiniEl = document.getElementById('liveCoachEnvMini');
+      if (!tagEl || !textEl) return;
+
+      const loc = currentSession.location;
+      const weather = getDynamicWeather(loc, currentSession.date);
+
+      if (envMiniEl) envMiniEl.textContent = `${loc} · ${weather.wind} · ${weather.pressure}`;
+
+      const curRoundHits = currentSession.hits[rIdx].filter(h => h === true).length;
+      const curRoundShots = currentSession.hits[rIdx].filter(h => h !== null).length;
+
+      if (arrowIdx === -1 || isHit === null) {
+        tagEl.textContent = `제 ${rIdx + 1}순 발사 대기 (${curRoundHits}/${curRoundShots}중)`;
+        if (curRoundShots === 0) {
+          textEl.innerHTML = `제 ${rIdx + 1}순 시작입니다. 현재 <strong>${weather.wind}</strong>, 기압 <strong>${weather.pressure}</strong>입니다. [${adviceBowLength}]와 ${adviceArrowWeight}돈 화살에 맞춰 과녁 흑심을 정조준하고 초시를 쏘십시오.`;
+        } else if (curRoundHits === 5) {
+          textEl.innerHTML = `★ <strong>제 ${rIdx + 1}순 5중 몰기(沒技) 완성!</strong> 흉허복실과 줌손 밀기가 완벽했습니다. 다음 순에서도 이 감각을 고스란히 이어가십시오!`;
+        } else {
+          textEl.innerHTML = `현재 제 ${rIdx + 1}순 ${curRoundHits}중 진행 중입니다. 남은 화살도 깍지손 턱밑 밀착 1초를 유지하며 정성껏 발시하십시오.`;
+        }
+        return;
+      }
+
+      const nextShotName = arrowIdx < 4 ? `${arrowIdx + 2}시` : `다음 ${rIdx + 2}순 초시`;
+
+      if (isHit === true) {
+        tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 관중(貫中)! 🎯`;
+        textEl.innerHTML = `🎯 <strong>관중!</strong> 과녁 정중앙을 꿰뚫었습니다. ${weather.wind}의 바람길을 잘 읽으셨습니다. [${nextShotName}]도 줌손 뿌리를 굳게 유지하세요.`;
+      } else {
+        if (missReason === 'front') {
+          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 앞남(前) 발생`;
+          textEl.innerHTML = `방금 살이 <strong>앞(좌측)</strong>으로 샜습니다. 줌손이 먼저 죽거나 깍지손 발시가 늦어 채인 것입니다. [${nextShotName}]는 <strong>줌손을 과녁 중심선에 굳게 박아두십시오.</strong>`;
+        } else if (missReason === 'back') {
+          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 뒤남(後) 발생`;
+          textEl.innerHTML = `방금 살이 <strong>뒤(우측)</strong>로 날렸습니다. 깍지손이 턱밑에서 일찍 떨어졌습니다. [${nextShotName}]는 <strong>턱밑 깍지 밀착을 1초간 확인 후</strong> 수평으로 가르십시오.`;
+        } else if (missReason === 'short') {
+          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 거리부족(短) 발생`;
+          textEl.innerHTML = `방금 살이 <strong>과녁 앞(단)</strong>에 떨어졌습니다. 기압(<strong>${weather.pressure}</strong>)의 공기 밀도로 낙차가 컸습니다. [${nextShotName}]는 <strong>만작을 100% 확보하고 흑심 상단 3cm</strong>를 조준하십시오.`;
+        } else if (missReason === 'long') {
+          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 거리초과(長) 발생`;
+          textEl.innerHTML = `방금 살이 <strong>과녁 뒤(장)</strong>로 넘어갔습니다. 줌손을 위로 과하게 쳐들었기 때문입니다. [${nextShotName}]는 <strong>줌손을 과녁 높이와 수평으로 지그시 뻗어내십시오.</strong>`;
+        }
+      }
+    }
+
+    function updateSessionMetrics() {
+      let totalHits = 0;
+      let totalShots = 0;
+      let molgiCount = 0;
+      const molgiRounds = [];
+
+      for (let r = 0; r < 9; r++) {
+        let rHits = 0;
+        let rShots = 0;
+        for (let a = 0; a < 5; a++) {
+          if (currentSession.hits[r][a] !== null) {
+            rShots++;
+            if (currentSession.hits[r][a] === true) rHits++;
+          }
+        }
+        totalHits += rHits;
+        totalShots += rShots;
+        if (rHits === 5) {
+          molgiCount++;
+          molgiRounds.push(`${r + 1}순`);
+        }
+      }
+
+      const hitRate = totalShots > 0 ? ((totalHits / totalShots) * 100).toFixed(1) : '0.0';
+
+      const dispHits = document.getElementById('displayTotalHits');
+      const dispShots = document.getElementById('displayShotArrows');
+      const dispRate = document.getElementById('displayHitRate');
+      const dispMolgi = document.getElementById('displayMolgiCount');
+      const dispMolgiRounds = document.getElementById('displayMolgiRounds');
+
+      if (dispHits) dispHits.textContent = totalHits;
+      if (dispShots) dispShots.textContent = totalShots;
+      if (dispRate) dispRate.textContent = `${hitRate}%`;
+      if (dispMolgi) dispMolgi.textContent = molgiCount;
+      if (dispMolgiRounds) {
+        dispMolgiRounds.textContent = molgiRounds.length > 0 ? `달성: ${molgiRounds.join(', ')}` : '아직 몰기 기록이 없습니다.';
+      }
+
+      const goal = currentSession.targetGoal;
+      const goalPct = Math.min(100, Math.round((totalHits / goal) * 100));
+      const goalBar = document.getElementById('goalProgressBar');
+      if (goalBar) goalBar.style.width = `${goalPct}%`;
+
+      const goalPctEl = document.getElementById('displayGoalProgressPct');
+      if (goalPctEl) goalPctEl.textContent = `${goalPct}%`;
+
+      const goalRatioEl = document.getElementById('displayGoalProgressRatio');
+      if (goalRatioEl) goalRatioEl.textContent = `${totalHits} / ${goal}중`;
+
+      const goalStatusEl = document.getElementById('displayGoalStatusText');
+      if (goalStatusEl) {
+        if (totalHits >= goal) {
+          goalStatusEl.textContent = `★ 목표 ${goal}중 돌파 달성!`;
+          goalStatusEl.className = 'text-[11px] font-black text-rose-600 truncate animate-pulse';
+          if (!currentSession.goalCelebrated) {
+            currentSession.goalCelebrated = true;
+            triggerConfetti(0.8);
+            showToast(`축하합니다! 목표 ${goal}중을 돌파하셨습니다! 🎯`);
+          }
+        } else {
+          goalStatusEl.textContent = `목표까지 ${goal - totalHits}중 남음`;
+          goalStatusEl.className = 'text-[11px] font-black text-slate-600 truncate';
+        }
+      }
+
+      evaluatePromotionDan(totalHits);
+    }
+
+    function evaluatePromotionDan(totalHits) {
+      const badge = document.getElementById('displayDanEvaluationBadge');
+      const sub = document.getElementById('displayDanEvaluationSub');
+      const hint = document.getElementById('displayDanNextHint');
+
+      let currentDan = '1급 미달';
+      let nextDan = '1급 (22중)';
+      let remaining = 22 - totalHits;
+
+      if (totalHits >= 39) {
+        currentDan = '★ 9단 합격 (최고궁)';
+        nextDan = '최고 단위 달성';
+        remaining = 0;
+      } else if (totalHits >= 37) {
+        currentDan = '★ 8단 합격 (37중)';
+        nextDan = '9단 (39중)';
+        remaining = 39 - totalHits;
+      } else if (totalHits >= 35) {
+        currentDan = '★ 7단 합격 (35중)';
+        nextDan = '8단 (37중)';
+        remaining = 37 - totalHits;
+      } else if (totalHits >= 33) {
+        currentDan = '★ 6단 합격 (33중)';
+        nextDan = '7단 (35중)';
+        remaining = 35 - totalHits;
+      } else if (totalHits >= 31) {
+        currentDan = '★ 5단 명궁 합격 (31중)';
+        nextDan = '6단 (33중)';
+        remaining = 33 - totalHits;
+      } else if (totalHits >= 30) {
+        currentDan = '★ 4단 합격 (30중)';
+        nextDan = '5단 명궁 (31중)';
+        remaining = 31 - totalHits;
+      } else if (totalHits >= 28) {
+        currentDan = '★ 3단 합격 (28중)';
+        nextDan = '4단 (30중)';
+        remaining = 30 - totalHits;
+      } else if (totalHits >= 26) {
+        currentDan = '★ 2단 합격 (26중)';
+        nextDan = '3단 (28중)';
+        remaining = 28 - totalHits;
+      } else if (totalHits >= 24) {
+        currentDan = '★ 초단(1단) 합격 (24중)';
+        nextDan = '2단 (26중)';
+        remaining = 26 - totalHits;
+      } else if (totalHits >= 22) {
+        currentDan = '★ 1급 공인 합격 (22중)';
+        nextDan = '초단(1단) (24중)';
+        remaining = 24 - totalHits;
+      } else if (totalHits >= 18) {
+        currentDan = '★ 0단 수련 달성 (18중)';
+        nextDan = '1급 (22중)';
+        remaining = 22 - totalHits;
+      }
+
+      if (badge) badge.textContent = currentDan;
+      if (sub) {
+        sub.textContent = remaining > 0 ? `${nextDan}까지 ${remaining}중 남음` : '최고봉에 도달하셨습니다!';
+      }
+      if (hint) hint.textContent = `다음: ${nextDan}`;
+    }
+
+    function renderMatrixTable() {
+      const tbody = document.getElementById('matrixTableBody');
+      if (!tbody) return;
+
+      let cumulative = 0;
+      tbody.innerHTML = Array.from({ length: 9 }).map((_, rIdx) => {
+        let rHits = 0;
+        const missDetails = [];
+
+        const arrowCells = Array.from({ length: 5 }).map((_, aIdx) => {
+          const val = currentSession.hits[rIdx][aIdx];
+          const reason = currentSession.missReasons[rIdx][aIdx];
+
+          if (val === true) {
+            rHits++;
+            return `<td class="py-2.5 px-1"><span class="inline-block w-6 h-6 rounded-full bg-emerald-500 text-white font-black text-sm leading-6 shadow-2xs">○</span></td>`;
+          } else if (val === false) {
+            const shortMap = { front: '앞', back: '뒤', short: '단', long: '장', none: '×' };
+            const char = shortMap[reason] || '×';
+            const colorMap = { front: 'text-rose-600 bg-rose-50', back: 'text-amber-800 bg-amber-50', short: 'text-sky-700 bg-sky-50', long: 'text-purple-700 bg-purple-50', none: 'text-slate-400 bg-slate-50' };
+            if (reason && reason !== 'none') missDetails.push(`${aIdx + 1}시(${char})`);
+            return `<td class="py-2.5 px-1"><span class="inline-block px-1.5 py-0.5 rounded-md font-black text-xs ${colorMap[reason] || 'text-slate-400'}">${char}</span></td>`;
+          } else {
+            return `<td class="py-2.5 px-1 text-slate-300 font-bold">-</td>`;
+          }
+        }).join('');
+
+        cumulative += rHits;
+        const isMolgi = rHits === 5;
+        const isCurrent = currentSession.activeRound === rIdx;
+
+        return `
+          <tr class="${isCurrent ? 'bg-teal-50 font-black' : 'hover:bg-slate-50'} transition cursor-pointer" onclick="setActiveRound(${rIdx})">
+            <td class="py-2.5 px-2 text-slate-700">${rIdx + 1}순</td>
+            ${arrowCells}
+            <td class="py-2.5 px-2 bg-emerald-50 font-black text-emerald-800 text-sm">${rHits}</td>
+            <td class="py-2.5 px-2 bg-slate-100 font-black text-slate-900">${cumulative}</td>
+            <td class="py-2.5 px-2 text-[10px] text-slate-500 font-bold">${missDetails.join(', ') || '-'}</td>
+            <td class="py-2.5 px-2">
+              ${isMolgi ? '<span class="px-2 py-0.5 bg-amber-400 text-slate-950 rounded-full text-[10px] font-black shadow-2xs">몰기</span>' : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setMode(mode) {
+      currentSession.mode = mode;
+      const btnPractice = document.getElementById('btnModePractice');
+      const btnPromotion = document.getElementById('btnModePromotion');
+
+      if (mode === 'practice') {
+        btnPractice.className = 'py-1 rounded-lg transition text-white bg-teal-700 shadow-xs';
+        btnPromotion.className = 'py-1 rounded-lg transition text-slate-600 hover:text-slate-900';
+        showToast('연습 모드로 전환되었습니다.');
+      } else {
+        btnPromotion.className = 'py-1 rounded-lg transition text-white bg-amber-600 shadow-xs';
+        btnPractice.className = 'py-1 rounded-lg transition text-slate-600 hover:text-slate-900';
+        showToast('승단 심사 모드로 전환되었습니다 (45시 규정 적용).');
+      }
+    }
+
+    function updateTargetGoal(val) {
+      currentSession.targetGoal = parseInt(val, 10);
+      const display = document.getElementById('targetGoalValueDisplay');
+      if (display) {
+        const criteria = DAN_CRITERIA.find(d => d.hits === currentSession.targetGoal);
+        display.textContent = `${currentSession.targetGoal}중 ${criteria ? '(' + criteria.dan + ')' : ''}`;
+      }
+      updateSessionMetrics();
+    }
+
+    function confirmResetCurrentSession() {
+      currentSession.hits = Array.from({ length: 9 }, () => Array(5).fill(null));
+      currentSession.missReasons = Array.from({ length: 9 }, () => Array(5).fill('none'));
+      currentSession.activeRound = 0;
+      currentSession.goalCelebrated = false;
+
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      showToast('사대 습사 기록이 초기화되었습니다.');
+    }
+
+    function onLocationChange(loc) {
+      currentSession.location = loc;
+      const weather = getDynamicWeather(loc, currentSession.date);
+
+      const locTag = document.getElementById('weatherLocationTag');
+      if (locTag) locTag.textContent = `${loc} (${currentSession.date} 기상)`;
+
+      const condTag = document.getElementById('weatherConditionTag');
+      if (condTag) condTag.textContent = weather.cond;
+
+      const tempEl = document.getElementById('weatherTempDisplay');
+      if (tempEl) tempEl.textContent = `기온 ${weather.temp}`;
+
+      const windEl = document.getElementById('weatherWindDisplay');
+      if (windEl) windEl.textContent = weather.wind;
+
+      const pressEl = document.getElementById('weatherPressureDisplay');
+      if (pressEl) pressEl.textContent = `기압 ${weather.pressure}`;
+
+      const tipEl = document.getElementById('weatherTacticalTip');
+      if (tipEl) tipEl.textContent = weather.tip;
+
+      const advLocSelect = document.getElementById('adviceLocationSelect');
+      if (advLocSelect) advLocSelect.value = loc;
+
+      const advMini = document.getElementById('adviceLocationWeatherMini');
+      if (advMini) advMini.textContent = `${loc} · ${weather.temp} · ${weather.wind} · ${weather.pressure}`;
+
+      renderAdviceView();
+    }
+
+    function onAdviceLocationChange(loc) {
+      onLocationChange(loc);
+      const sLoc = document.getElementById('sessionLocation');
+      if (sLoc) sLoc.value = loc;
+    }
+
+    function setAdviceBowLength(lengthType, triggerRender = true) {
+      adviceBowLength = lengthType;
+      const lengths = ['단궁', '중궁', '장궁'];
+      lengths.forEach(len => {
+        const btn = document.getElementById(`btnBowLen-${len}`);
+        if (!btn) return;
+        if (len === lengthType) {
+          btn.className = 'py-1 px-1.5 rounded-lg text-xs font-black transition border bg-amber-500 text-slate-950 border-amber-400 shadow-xs';
+        } else {
+          btn.className = 'py-1 px-1.5 rounded-lg text-xs font-black transition border text-slate-300 border-slate-700 bg-slate-800';
+        }
+      });
+
+      if (triggerRender) {
+        renderAdviceView();
+        showToast(`활 크기 [${lengthType}] 설정에 맞춰 사법 조언이 갱신되었습니다.`);
+      }
+    }
+
+    function onAdviceArrowConfigChange() {
+      const matSelect = document.getElementById('adviceArrowMaterialSelect');
+      const wtSelect = document.getElementById('adviceArrowWeightSelect');
+      const lenSelect = document.getElementById('adviceArrowLengthSelect');
+      
+      if (matSelect) adviceArrowMaterial = matSelect.value;
+      if (wtSelect) adviceArrowWeight = wtSelect.value;
+      if (lenSelect) adviceArrowLength = lenSelect.value;
+
+      updateAdviceArrowDescription();
+      renderAdviceView();
+      showToast(`화살 [${adviceArrowMaterial} ${adviceArrowWeight}돈 (${adviceArrowLength})] 제원이 반영되었습니다.`);
+    }
+
+    function updateAdviceArrowDescription() {
+      const badge = document.getElementById('adviceArrowBadge');
+      if (badge) badge.textContent = `${adviceArrowMaterial} ${adviceArrowWeight}돈 (${adviceArrowLength})`;
+
+      const desc = document.getElementById('adviceArrowDescription');
+      if (!desc) return;
+
+      const wtNum = parseFloat(adviceArrowWeight);
+      let wtDesc = wtNum <= 5.5 ? '극경량(5.0~5.5돈): 탄속이 매우 빠르고 초반 비상이 곧으나 측풍 정온 발시가 핵심입니다.'
+                 : (wtNum <= 6.5 ? '표준 중량(6.0~6.5돈): 가장 균형 잡힌 145m 직진성을 발휘하는 국궁 표준 살입니다.'
+                 : '중량살(7.0~8.5돈): 묵직한 질량으로 강한 바람을 뚫고 탄착군을 집속시킵니다.');
+
+      desc.textContent = `${adviceArrowMaterial} ${adviceArrowWeight}돈 (${adviceArrowLength}): ${wtDesc}`;
+    }
+
+    function updateAdviceCustomBow(val) {
+      if (val.trim()) {
+        renderAdviceView();
+        showToast(`활 제원(${val})이 사법 조언에 반영되었습니다.`);
+      }
+    }
+
+    function renderAdviceView() {
+      const archer = getCurrentArcher();
+      const location = currentSession.location;
+      const weather = getDynamicWeather(location, currentSession.date);
+
+      const nameDisp = document.getElementById('adviceArcherNameDisplay');
+      if (nameDisp) nameDisp.textContent = archer.name;
+
+      const jeongDisp = document.getElementById('adviceJeongDisplay');
+      if (jeongDisp) jeongDisp.textContent = location;
+
+      const bowCustomVal = document.getElementById('adviceBowCustomInput')?.value || archer.bow;
+      const bowTypeBadge = document.getElementById('adviceBowTypeBadge');
+      if (bowTypeBadge) bowTypeBadge.textContent = `[${adviceBowLength}] ${bowCustomVal}`;
+
+      const windBadge = document.getElementById('adviceWindBadge');
+      if (windBadge) windBadge.textContent = `${weather.wind}`;
+
+      const pressureBadge = document.getElementById('advicePressureBadge');
+      if (pressureBadge) pressureBadge.textContent = `${weather.pressure} (${weather.cond})`;
+
+      let aimText = '';
+      let windImpact = '편차 약 ±10~15cm';
+      const wtVal = parseFloat(adviceArrowWeight) || 6.5;
+
+      if (weather.wind.includes('서풍') || weather.wind.includes('남서풍') || weather.wind.includes('북서풍')) {
+        aimText = `현재 <strong>${weather.wind}</strong>이 불고 있습니다. ${adviceArrowWeight}돈 화살이 우측에서 좌측(앞)으로 밀릴 수 있으므로, 과녁 흑심을 기준으로 <strong>우측(뒤남 방향)으로 10~15cm</strong> 오조준하여 발시하십시오.`;
+        windImpact = `편차 약 ±${(12 * (6.5 / wtVal)).toFixed(0)}cm`;
+      } else {
+        aimText = `풍속이 잔잔하여 ${adviceArrowWeight}돈 화살의 직진성이 매우 높습니다. 과녁 흑심 중앙을 곧게 정조준하시고 줌손 밀기에만 집중하십시오.`;
+        windImpact = '편차 미미 (±4cm 이내)';
+      }
+
+      const aimEl = document.getElementById('adviceAimingOffsetTxt');
+      if (aimEl) aimEl.innerHTML = aimText;
+
+      const windScaleEl = document.getElementById('adviceWindImpactScale');
+      if (windScaleEl) windScaleEl.textContent = windImpact;
+
+      const ballisticsEl = document.getElementById('adviceBallisticsTxt');
+      if (ballisticsEl) {
+        ballisticsEl.innerHTML = `대기압 <strong>${weather.pressure}</strong>과 기온 <strong>${weather.temp}</strong> 기준: 공기 밀도가 안정적입니다. 화살 길이(${adviceArrowLength})를 끝까지 살려 완전 만작하고 흑심 상단 3cm를 조준하십시오.`;
+      }
+
+      const titleLenEl = document.getElementById('adviceBowLengthTitle');
+      const actionEl = document.getElementById('adviceBowActionTxt');
+      const gripEl = document.getElementById('adviceGripRecommendation');
+
+      if (adviceBowLength === '단궁') {
+        if (titleLenEl) titleLenEl.textContent = '단궁(短弓) 사법 핵심: 채임 제어 & 줌손 안정';
+        if (actionEl) actionEl.innerHTML = `단궁은 탄속이 비상히 빠르고 채임이 날카롭습니다. 줌손 엄지뿌리가 흔들리지 않도록 <strong>줌손을 과녁 중심선에 강력히 밀어 박고(흘려쥠)</strong>, 깍지손을 지체 없이 곧게 가르십시오.`;
+        if (gripEl) gripEl.textContent = '단궁 권장: 흘려쥠(밀기 위주)';
+      } else if (adviceBowLength === '장궁') {
+        if (titleLenEl) titleLenEl.textContent = '장궁(長弓) 사법 핵심: 웅장한 포물선 & 만작 깊이';
+        if (actionEl) actionEl.innerHTML = `장궁은 만작이 매우 부드럽고 줌손 충격이 적습니다. 화살 길이(${adviceArrowLength})를 온전히 다 당겨 <strong>만작 깊이를 끝까지 유지하며 호흡을 1초 고른 후</strong> 수평 떼기로 발시하십시오.`;
+        if (gripEl) gripEl.textContent = '장궁 권장: 턱밑 수평 분리';
+      } else {
+        if (titleLenEl) titleLenEl.textContent = '중궁(中弓) 사법 핵심: 반발력과 밸런스의 정석';
+        if (actionEl) actionEl.innerHTML = `중궁은 국궁의 표준으로 탄도 곡선과 줌손 지지가 가장 균형적입니다. <strong>${bowCustomVal}</strong>와 <strong>${adviceArrowMaterial} ${adviceArrowWeight}돈</strong>의 조합 효율을 극대화하기 위해 흉허복실로 만작하십시오.`;
+        if (gripEl) gripEl.textContent = '중궁 권장: 정심정기 흘려쥠';
+      }
+
+      // Miss Diagnosis update
+      let mFront = 0, mBack = 0, mShort = 0, mLong = 0;
+      for (let r = 0; r < 9; r++) {
+        for (let a = 0; a < 5; a++) {
+          if (currentSession.hits[r][a] === false) {
+            const re = currentSession.missReasons[r][a];
+            if (re === 'front') mFront++;
+            else if (re === 'back') mBack++;
+            else if (re === 'short') mShort++;
+            else if (re === 'long') mLong++;
+          }
+        }
+      }
+
+      const totalMiss = mFront + mBack + mShort + mLong;
+      const dominantMissBadge = document.getElementById('adviceDominantMissBadge');
+      const correctionDrillEl = document.getElementById('adviceCorrectionDrillTxt');
+
+      if (totalMiss === 0) {
+        if (dominantMissBadge) dominantMissBadge.textContent = '현재 전중(全中) 유지';
+        if (correctionDrillEl) correctionDrillEl.innerHTML = '현재까지 불관 화살이 없습니다! 집중력을 유지하고 매 순마다 <strong>비정비팔</strong> 발디딤과 호흡을 고르게 가다듬으십시오.';
+      } else {
+        const missArr = [
+          { type: '앞남(前)', count: mFront, key: 'front' },
+          { type: '뒤남(後)', count: mBack, key: 'back' },
+          { type: '거리부족(短)', count: mShort, key: 'short' },
+          { type: '거리초과(長)', count: mLong, key: 'long' }
+        ];
+        missArr.sort((a, b) => b.count - a.count);
+        const top = missArr[0];
+
+        if (dominantMissBadge) dominantMissBadge.textContent = `${top.type} (${top.count}회 최다)`;
+
+        let drillMsg = '';
+        if (top.key === 'front') drillMsg = `오늘 습사에서 <strong>앞남(좌측 이탈, ${mFront}회)</strong>이 가장 많습니다. 줌손 엄지뿌리가 먼저 죽거나 깍지손 떼기가 늦어 줌손 쪽으로 채이는 것이 원인입니다. <strong>줌손을 과녁 정면으로 굳게 밀고 깍지손을 과감하게 채십시오.</strong>`;
+        else if (top.key === 'back') drillMsg = `오늘 습사에서 <strong>뒤남(우측 이탈, ${mBack}회)</strong>이 빈번합니다. 깍지손이 턱밑에서 미리 떨어지는 현상입니다. <strong>만작 시 살먹이가 턱밑에 밀착되었는지 1초간 점검 후 발시하십시오.</strong>`;
+        else if (top.key === 'short') drillMsg = `오늘 습사에서 <strong>거리부족(단, ${mShort}회)</strong>이 주된 불관입니다. 화살 무게(${adviceArrowWeight}돈) 대비 만작 당김이 덜 찼습니다. <strong>가슴을 열어 만작 길이(${adviceArrowLength})를 완전히 확보하십시오.</strong>`;
+        else if (top.key === 'long') drillMsg = `오늘 습사에서 <strong>거리초과(장, ${mLong}회)</strong>가 발생하고 있습니다. 줌손을 과도하게 위로 쳐들었기 때문입니다. <strong>과녁 높이에 맞추어 줌손을 수평으로 뻗어내십시오.</strong>`;
+
+        if (correctionDrillEl) correctionDrillEl.innerHTML = drillMsg;
+      }
+    }
+
+    /* Gemini AI Archery Master Q&A Integration */
+    async function sendMasterChatQuestion() {
+      const input = document.getElementById('aiMasterInput');
+      if (!input) return;
+      const query = input.value.trim();
+      if (!query) return;
+
+      appendMasterChatMessage('user', query);
+      input.value = '';
+
+      const btn = document.getElementById('btnSendMasterChat');
+      if (btn) btn.disabled = true;
+
+      const archer = getCurrentArcher();
+      const location = currentSession.location;
+      const weather = getDynamicWeather(location, currentSession.date);
+
+      let mFront = 0, mBack = 0, mShort = 0, mLong = 0, totalHits = 0, totalShots = 0;
+      for (let r = 0; r < 9; r++) {
+        for (let a = 0; a < 5; a++) {
+          if (currentSession.hits[r][a] !== null) {
+            totalShots++;
+            if (currentSession.hits[r][a] === true) totalHits++;
+            else {
+              const res = currentSession.missReasons[r][a];
+              if (res === 'front') mFront++;
+              else if (res === 'back') mBack++;
+              else if (res === 'short') mShort++;
+              else if (res === 'long') mLong++;
+            }
+          }
+        }
+      }
+
+      const promptSystem = `당신은 대한민국 국궁(國弓)의 최고 원로이자 9단 명궁 사두(射頭)입니다.
+국궁 칠계(七誡), 집궁팔원칙(執弓八原則), 훈시(訓示), 그리고 활의 크기(단궁, 중궁, 장궁) 및 파운드(#), 화살 무게(돈수)·길이(치수), 국궁장 지형과 날씨(풍향·풍속·기압)에 따른 탄도학에 정통합니다.
+경쾌하면서도 품격 있고 따뜻한 명궁의 어조로 궁사의 질문에 대해 실전 줌손·깍지손 교정 사법과 145m 과녁 오조준 요령을 명쾌하게 답변하십시오.`;
+
+      const bowCustomVal = document.getElementById('adviceBowCustomInput')?.value || archer.bow;
+      const promptUser = `
+[사수 현황 및 장비 제원]
+- 궁사명: ${archer.name} (${archer.jeong})
+- 목표 급·단위: ${archer.targetDan}
+- 활 제원: [${adviceBowLength}] ${bowCustomVal}
+- 화살 제원: ${adviceArrowMaterial} ${adviceArrowWeight}돈 (${adviceArrowLength})
+- 현장 기상: ${location}, ${weather.cond}, ${weather.temp}, ${weather.wind}, 기압 ${weather.pressure}
+- 오늘 사대 실시간 성적: ${totalHits}중 / ${totalShots}시 (앞남 ${mFront}, 뒤남 ${mBack}, 단 ${mShort}, 장 ${mLong})
+
+[궁사의 질문]
+"${query}"
+
+[답변 요청]
+위 궁사에게 1) 문제의 핵심 원인 분석, 2) 줌손과 깍지손 즉각 교정 사법, 3) 현장 기상과 장비에 맞춘 실전 팁을 명쾌하고 정갈하게 조언해 주십시오.`;
+
+      appendMasterChatMessage('assistant', '...', true);
+
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptUser }] }],
+            systemInstruction: { parts: [{ text: promptSystem }] }
+          })
+        });
+
+        const result = await response.json();
+        const candidate = result.candidates?.[0];
+        const generatedText = candidate?.content?.parts?.[0]?.text;
+
+        removeChatLoadingMessage();
+
+        if (generatedText) {
+          appendMasterChatMessage('assistant', generatedText);
+        } else {
+          throw new Error('AI 응답 누락');
+        }
+      } catch (err) {
+        console.debug('Gemini API call fallback to archery master heuristics:', err);
+        removeChatLoadingMessage();
+
+        // High quality tactical fallback if network or key is unavailable
+        let fallbackReply = `궁사님, 질문에 답을 전합니다.\n\n`;
+        if (query.includes('앞남') || mFront > mBack) {
+          fallbackReply += `현재 [${adviceBowLength} ${bowCustomVal}] 조건에서 앞남(좌측 이탈)은 줌손 엄지뿌리가 과녁 쪽으로 굳게 버티지 못하고 왼쪽으로 주저앉거나, 깍지손 떼기가 늦어 활채에 채이는 것이 주원인입니다.\n\n• **교정 사법:** 발시 순간까지 **줌손을 과녁 중심선에 굳게 박아두고(흘려쥠 밀기)**, 깍지손을 귀 뒤로 지체 없이 가르십시오.`;
+        } else if (query.includes('단') || query.includes('거리부족') || mShort > 2) {
+          fallbackReply += `현재 기압 **${weather.pressure}**에서는 공기 밀도 저항이 형성됩니다. 화살(${adviceArrowWeight}돈)의 직진성을 살리려면 만작 길이가 덜 차지 않도록 가슴을 활짝 열어 **완전 만작**을 확보하고, 과녁 흑심 **상단 3~5cm**를 높여 겨냥하십시오.`;
+        } else if (query.includes('뒤남') || mBack > mFront) {
+          fallbackReply += `뒤남(우측 이탈)은 깍지손이 턱밑 밀착점에서 조급하게 떨어지며 발생합니다. 살먹이가 뺨과 턱밑에 완벽히 닿아 있는지 마음속으로 **1초간 점검한 후** 수평 분리하십시오.`;
+        } else {
+          fallbackReply += `현재 ${location}의 **${weather.wind}**과 기압 **${weather.pressure}**에서는 **비정비팔(非丁非八)** 발디딤을 굳건히 하고 아랫배에 기운을 채우는 **흉허복실(胸虛腹實)**이 기본입니다. 줌손과 깍지손이 서로 대칭으로 동일한 속도로 열리도록 사법을 펼치십시오.`;
+        }
+        appendMasterChatMessage('assistant', fallbackReply);
+      } finally {
+        if (btn) btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function sendQuickQuery(text) {
+      const input = document.getElementById('aiMasterInput');
+      if (input) input.value = text;
+      sendMasterChatQuestion();
+    }
+
+    function appendMasterChatMessage(role, text, isLoading = false) {
+      const box = document.getElementById('aiMasterChatBox');
+      if (!box) return;
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = role === 'user' ? 'flex items-start justify-end space-x-2' : 'flex items-start space-x-2.5';
+      if (isLoading) msgDiv.id = 'aiChatLoadingBubble';
+
+      if (role === 'user') {
+        msgDiv.innerHTML = `
+          <div class="p-3 bg-teal-600 text-white rounded-2xl rounded-tr-none leading-relaxed max-w-xl font-bold shadow-xs">
+            ${escapeHtml(text)}
+          </div>
+          <div class="w-8 h-8 rounded-xl bg-slate-700 text-teal-300 flex items-center justify-center font-black text-xs shrink-0 mt-0.5 shadow-xs">
+            弓
+          </div>
+        `;
+      } else {
+        const formatted = isLoading 
+          ? `<div class="flex items-center space-x-1.5"><div class="w-2 h-2 rounded-full bg-teal-400 animate-bounce"></div><div class="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style="animation-delay:0.2s"></div><div class="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style="animation-delay:0.4s"></div></div>`
+          : formatArcheryAdviceMarkdown(text);
+
+        msgDiv.innerHTML = `
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5 shadow-xs">
+            頭
+          </div>
+          <div class="p-3.5 bg-teal-900/40 border border-teal-700/60 rounded-2xl rounded-tl-none text-slate-100 leading-relaxed max-w-2xl font-bold">
+            ${formatted}
+          </div>
+        `;
+      }
+
+      box.appendChild(msgDiv);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function removeChatLoadingMessage() {
+      const loading = document.getElementById('aiChatLoadingBubble');
+      if (loading) loading.remove();
+    }
+
+    function clearMasterChat() {
+      const box = document.getElementById('aiMasterChatBox');
+      if (box) {
+        box.innerHTML = `
+          <div class="flex items-start space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-teal-500 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5 shadow-xs">
+              頭
+            </div>
+            <div class="p-3.5 bg-teal-900/40 border border-teal-700/60 rounded-2xl rounded-tl-none text-slate-200 leading-relaxed max-w-2xl font-bold">
+              대화창이 정돈되었습니다. 사대에서 발생한 불관 원인과 교정법을 언제든 물어보십시오.
+            </div>
+          </div>
+        `;
+      }
+      showToast('AI 사두 대화창이 정돈되었습니다.');
+    }
+
+    function formatArcheryAdviceMarkdown(raw) {
+      return raw
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-amber-300 font-black">$1</strong>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n• /g, '<br>• ')
+        .replace(/\n/g, '<br>');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    async function requestAiArcheryAdvice() {
+      sendQuickQuery('오늘 활터의 기상, 활(단·중·장궁)과 화살 제원, 그리고 오늘 사대 불관 기록을 종합 분석하여 명궁 사두의 총평과 원포인트 사법 처방을 내려주십시오.');
+    }
+
+    /* Siji Sheet Rendering & Printing */
+    function renderSiji() {
+      const archer = getCurrentArcher();
+      const weather = getDynamicWeather(currentSession.location, currentSession.date);
+
+      const sDate = document.getElementById('sijiDate');
+      if (sDate) sDate.textContent = currentSession.date;
+
+      const sJeong = document.getElementById('sijiJeong');
+      if (sJeong) sJeong.textContent = currentSession.location;
+
+      const sName = document.getElementById('sijiArcherName');
+      if (sName) sName.textContent = archer.name;
+
+      const sBow = document.getElementById('sijiBow');
+      if (sBow) sBow.textContent = `[${archer.bowLength || '중궁'}] ${archer.bow} · ${archer.arrow || '카본 6.5돈'}`;
+
+      const sWeather = document.getElementById('sijiWeatherText');
+      if (sWeather) sWeather.textContent = `${currentSession.location} 기상: ${weather.cond} (${weather.temp}) · ${weather.wind} · 기압 ${weather.pressure}`;
+
+      const sigArcher = document.getElementById('sijiArcherSignature');
+      if (sigArcher) sigArcher.innerHTML = `${archer.name}<br>(인)`;
+
+      const tbody = document.getElementById('sijiTableBody');
+      let totalHits = 0;
+      let totalShots = 0;
+      let molgiCount = 0;
+      let mFront = 0, mBack = 0, mShort = 0, mLong = 0;
+      const missList = [];
+
+      if (tbody) {
+        let cumulative = 0;
+        tbody.innerHTML = Array.from({ length: 9 }).map((_, rIdx) => {
+          let rHits = 0;
+          const arrowCols = Array.from({ length: 5 }).map((_, aIdx) => {
+            const val = currentSession.hits[rIdx][aIdx];
+            const reason = currentSession.missReasons[rIdx][aIdx];
+
+            if (val === true) {
+              rHits++;
+              return `<td class="py-2.5 px-2 border-r border-stone-300 font-black text-emerald-800 text-sm">○</td>`;
+            } else if (val === false) {
+              const charMap = { front: '앞', back: '뒤', short: '단', long: '장', none: '×' };
+              const char = charMap[reason] || '×';
+              if (reason === 'front') mFront++;
+              else if (reason === 'back') mBack++;
+              else if (reason === 'short') mShort++;
+              else if (reason === 'long') mLong++;
+
+              if (reason && reason !== 'none') missList.push(`${rIdx + 1}순 ${aIdx + 1}시(${char})`);
+              return `<td class="py-2.5 px-2 border-r border-stone-300 text-stone-500 font-bold">${char}</td>`;
+            } else {
+              return `<td class="py-2.5 px-2 border-r border-stone-300 text-stone-300">-</td>`;
+            }
+          }).join('');
+
+          totalHits += rHits;
+          cumulative += rHits;
+          if (rHits === 5) molgiCount++;
+
+          return `
+            <tr class="border-b border-stone-300">
+              <td class="py-2.5 px-2 border-r border-stone-400 font-serif font-bold bg-stone-100/50">${rIdx + 1}순</td>
+              ${arrowCols}
+              <td class="py-2.5 px-2 border-r border-stone-400 font-black bg-stone-200/40 text-stone-900">${rHits}</td>
+              <td class="py-2.5 px-2 font-black bg-stone-200/60 text-stone-900">${cumulative}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      for (let r = 0; r < 9; r++) {
+        for (let a = 0; a < 5; a++) {
+          if (currentSession.hits[r][a] !== null) totalShots++;
+        }
+      }
+
+      const hitRate = totalShots > 0 ? ((totalHits / totalShots) * 100).toFixed(1) : '0.0';
+
+      const sTotal = document.getElementById('sijiTotalHits');
+      const sRate = document.getElementById('sijiHitRate');
+      const sMolgi = document.getElementById('sijiMolgiCount');
+      if (sTotal) sTotal.textContent = totalHits;
+      if (sRate) sRate.textContent = `${hitRate}%`;
+      if (sMolgi) sMolgi.textContent = molgiCount;
+
+      const sJudge = document.getElementById('sijiJudgementText');
+      if (sJudge) {
+        if (totalHits >= 39) sJudge.textContent = '★ 9단 합격 (39중 이상 달성, 대한민국 최고궁)';
+        else if (totalHits >= 31) sJudge.textContent = '★ 5단 명궁 합격권 (각궁·죽시 심사 기준 충족)';
+        else if (totalHits >= 24) sJudge.textContent = '★ 유단자 합격권 (초단 24중 이상)';
+        else if (totalHits >= 22) sJudge.textContent = '★ 1급 공인 합격 (22중 달성)';
+        else if (totalHits >= 18) sJudge.textContent = '★ 0단 수련 달성 (18중 도달)';
+        else sJudge.textContent = '1급 미달 (개정 1급 22중 기준)';
+      }
+
+      const mfEl = document.getElementById('memoMissFrontCount');
+      const mbEl = document.getElementById('memoMissBackCount');
+      const msEl = document.getElementById('memoMissShortCount');
+      const mlEl = document.getElementById('memoMissLongCount');
+      if (mfEl) mfEl.textContent = `${mFront}회`;
+      if (mbEl) mbEl.textContent = `${mBack}회`;
+      if (msEl) msEl.textContent = `${mShort}회`;
+      if (mlEl) mlEl.textContent = `${mLong}회`;
+
+      const mDetails = document.getElementById('memoMissArrowDetails');
+      if (mDetails) {
+        mDetails.textContent = missList.length > 0 ? missList.join(', ') : '기록된 불관 화살이 없습니다. 전중(全中) 또는 연습 중입니다.';
+      }
+    }
+
+    function copySijiText() {
+      const archer = getCurrentArcher();
+      let totalHits = 0;
+      const roundHits = [];
+
+      for (let r = 0; r < 9; r++) {
+        const rh = currentSession.hits[r].filter(h => h === true).length;
+        roundHits.push(`${r + 1}순:${rh}중`);
+        totalHits += rh;
+      }
+
+      const text = `[국궁 습사 성적표 矢紙]\n사수: ${archer.name} (${currentSession.location})\n일자: ${currentSession.date}\n장비: [${archer.bowLength || '중궁'}] ${archer.bow} / ${archer.arrow}\n총 관중: ${totalHits}중 / 45시 (${((totalHits / 45) * 100).toFixed(1)}%)\n순별 시수: ${roundHits.join(', ')}\n대한궁도협회 규격 K-Archery Live Pro`;
+
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = text;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempTextArea);
+
+      showToast('矢紙(시지) 성적이 클립보드에 복사되었습니다.');
+    }
+
+    /* Session History Storage, Review and Analytics */
+    function saveCurrentSessionToHistory() {
+      const archer = getCurrentArcher();
+      let totalHits = 0;
+      let totalShots = 0;
+      let molgiCount = 0;
+      const roundHits = [];
+      let mFront = 0, mBack = 0, mShort = 0, mLong = 0;
+
+      for (let r = 0; r < 9; r++) {
+        let rHits = 0;
+        for (let a = 0; a < 5; a++) {
+          if (currentSession.hits[r][a] !== null) {
+            totalShots++;
+            if (currentSession.hits[r][a] === true) rHits++;
+            else {
+              const res = currentSession.missReasons[r][a];
+              if (res === 'front') mFront++;
+              else if (res === 'back') mBack++;
+              else if (res === 'short') mShort++;
+              else if (res === 'long') mLong++;
+            }
+          }
+        }
+        roundHits.push(rHits);
+        totalHits += rHits;
+        if (rHits === 5) molgiCount++;
+      }
+
+      if (totalShots === 0) {
+        showToast('저장할 습사 화살 기록이 없습니다.');
+        return;
+      }
+
+      const weather = getDynamicWeather(currentSession.location, currentSession.date);
+      const memo = document.getElementById('sijiCustomMemoInput')?.value || '정심정기로 45시 습사 완료.';
+
+      const newEntry = {
+        id: 'hist-' + Date.now(),
+        archerId: archer.id,
+        archerName: archer.name,
+        bowSpec: `[${archer.bowLength || '중궁'}] ${archer.bow}`,
+        arrowSpec: archer.arrow,
+        date: currentSession.date,
+        location: currentSession.location,
+        mode: currentSession.mode,
+        targetGoal: currentSession.targetGoal,
+        totalHits,
+        totalArrows: totalShots,
+        hitRate: parseFloat(((totalHits / totalShots) * 100).toFixed(1)),
+        molgiCount,
+        missReasons: { front: mFront, back: mBack, short: mShort, long: mLong },
+        roundHits,
+        memo,
+        weatherText: `${currentSession.location}: ${weather.cond} (${weather.temp}) · ${weather.wind} · ${weather.pressure}`,
+        hitsRaw: JSON.parse(JSON.stringify(currentSession.hits)),
+        missReasonsRaw: JSON.parse(JSON.stringify(currentSession.missReasons))
+      };
+
+      sessionHistory.unshift(newEntry);
+      saveHistoryToStorage();
+      renderHistoryList();
+      showToast(`'${archer.name}' 사수 ${totalHits}중 습사 일지가 보관함에 저장되었습니다!`);
+    }
+
+    function loadHistoryFromStorage() {
+      try {
+        const saved = localStorage.getItem('kg_session_history_v3');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) sessionHistory = parsed;
+        }
+      } catch (e) {
+        console.debug('History storage load fallback', e);
+      }
+    }
+
+    function saveHistoryToStorage() {
+      try {
+        localStorage.setItem('kg_session_history_v3', JSON.stringify(sessionHistory));
+      } catch (e) {
+        console.debug('History storage save fallback', e);
+      }
+    }
+
+    function populateHistoryFilterOptions() {
+      const select = document.getElementById('historyFilterArcherSelect');
+      if (!select) return;
+      select.innerHTML = '<option value="ALL">전체 궁사 이력</option>' + archers.map(a => `
+        <option value="${a.id}">${a.name} (${a.jeong})</option>
+      `).join('');
+    }
+
+    function renderHistoryList() {
+      const listContainer = document.getElementById('historyEntriesList');
+      if (!listContainer) return;
+
+      const filterArcher = document.getElementById('historyFilterArcherSelect')?.value || 'ALL';
+      const searchKeyword = (document.getElementById('historySearchKeyword')?.value || '').trim().toLowerCase();
+
+      let filtered = sessionHistory.filter(h => {
+        if (filterArcher !== 'ALL' && h.archerId !== filterArcher) return false;
+        if (searchKeyword) {
+          const matchLoc = (h.location || '').toLowerCase().includes(searchKeyword);
+          const matchName = (h.archerName || '').toLowerCase().includes(searchKeyword);
+          const matchMemo = (h.memo || '').toLowerCase().includes(searchKeyword);
+          if (!matchLoc && !matchName && !matchMemo) return false;
+        }
+        return true;
+      });
+
+      // Update Summary Cards
+      const totalSessionsEl = document.getElementById('histSummaryTotalSessions');
+      const maxHitsEl = document.getElementById('histSummaryMaxHits');
+      const totalArrowsEl = document.getElementById('histSummaryTotalArrows');
+      const totalMolgiEl = document.getElementById('histSummaryTotalMolgi');
+
+      if (totalSessionsEl) totalSessionsEl.textContent = sessionHistory.length;
+      if (maxHitsEl) {
+        const max = sessionHistory.reduce((m, c) => Math.max(m, c.totalHits || 0), 0);
+        maxHitsEl.textContent = max;
+      }
+      if (totalArrowsEl) {
+        const sumArrows = sessionHistory.reduce((s, c) => s + (c.totalArrows || 45), 0);
+        totalArrowsEl.textContent = sumArrows;
+      }
+      if (totalMolgiEl) {
+        const sumMolgi = sessionHistory.reduce((s, c) => s + (c.molgiCount || 0), 0);
+        totalMolgiEl.textContent = sumMolgi;
+      }
+
+      if (filtered.length === 0) {
+        listContainer.innerHTML = `
+          <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center text-slate-400 font-bold">
+            보관된 습사 일지가 없습니다. 사대에서 습사 후 저장해 주십시오.
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = filtered.map(h => `
+        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-clay flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-teal-500 transition">
+          <div class="space-y-1.5 flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-black text-slate-900">${h.date}</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800">${h.archerName} 사수</span>
+              <span class="text-xs font-bold text-slate-500">${h.location}</span>
+            </div>
+            <div class="text-xs text-slate-600 font-bold flex flex-wrap items-center gap-3">
+              <span>장비: <strong>${h.bowSpec}</strong> / ${h.arrowSpec}</span>
+              <span>·</span>
+              <span>관중: <strong class="text-emerald-700 text-sm font-black">${h.totalHits}중</strong> (${h.hitRate}%)</span>
+              <span>·</span>
+              <span>몰기: <strong class="text-amber-600 font-black">${h.molgiCount}회</strong></span>
+            </div>
+            <p class="text-xs text-slate-500 font-bold truncate">사법 메모: ${h.memo || '-'}</p>
+          </div>
+
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="restoreSessionToLane('${h.id}')" class="px-3.5 py-2 bg-teal-50 hover:bg-teal-700 hover:text-white text-teal-800 rounded-xl text-xs font-black transition flex items-center space-x-1 shadow-2xs">
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+              <span>사대 복기</span>
+            </button>
+            <button onclick="deleteHistoryEntry('${h.id}')" class="p-2 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-slate-400 transition" title="삭제">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function restoreSessionToLane(id) {
+      const entry = sessionHistory.find(h => h.id === id);
+      if (!entry) return;
+
+      currentSession.date = entry.date;
+      currentSession.location = entry.location;
+      currentSession.mode = entry.mode || 'practice';
+      currentSession.targetGoal = entry.targetGoal || 28;
+
+      if (entry.hitsRaw && entry.missReasonsRaw) {
+        currentSession.hits = JSON.parse(JSON.stringify(entry.hitsRaw));
+        currentSession.missReasons = JSON.parse(JSON.stringify(entry.missReasonsRaw));
+      } else {
+        // Reconstruct from roundHits
+        currentSession.hits = Array.from({ length: 9 }, (_, r) => {
+          const rh = entry.roundHits[r] || 0;
+          return Array.from({ length: 5 }, (_, a) => a < rh ? true : false);
+        });
+        currentSession.missReasons = Array.from({ length: 9 }, () => Array(5).fill('none'));
+      }
+
+      currentSession.activeRound = 0;
+      currentSession.goalCelebrated = true;
+
+      if (entry.archerId && archers.some(a => a.id === entry.archerId)) {
+        currentArcherId = entry.archerId;
+      }
+
+      updateArcherUI();
+      renderRoundTabButtons();
+      renderActiveRoundArrows();
+      renderMatrixTable();
+      updateSessionMetrics();
+      onLocationChange(entry.location);
+
+      switchTab('shoot');
+      showToast(`'${entry.date} ${entry.archerName}' 습사 기록이 사대로 복기되었습니다.`);
+    }
+
+    function deleteHistoryEntry(id) {
+      sessionHistory = sessionHistory.filter(h => h.id !== id);
+      saveHistoryToStorage();
+      renderHistoryList();
+      showToast('습사 기록이 삭제되었습니다.');
+    }
+
+    function exportHistoryBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessionHistory, null, 2));
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", `k_archery_history_${new Date().toISOString().split('T')[0]}.json`);
+      dlAnchorElem.click();
+      showToast('습사 일지 백업 파일이 다운로드되었습니다.');
+    }
+
+    function triggerHistoryRestore() {
+      const input = document.getElementById('historyRestoreFileInput');
+      if (input) input.click();
+    }
+
+    function handleHistoryFileRestore(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (Array.isArray(parsed)) {
+            sessionHistory = parsed;
+            saveHistoryToStorage();
+            renderHistoryList();
+            showToast('습사 일지 파일이 성공적으로 복원되었습니다.');
+          }
+        } catch (err) {
+          showToast('올바른 백업 JSON 파일이 아닙니다.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderAnalyticsCharts() {
+      const archer = getCurrentArcher();
+      const title = document.getElementById('analyticsArcherTitle');
+      if (title) title.textContent = archer.name;
+
+      const countEl = document.getElementById('analyticsSessionCount');
+      if (countEl) countEl.textContent = sessionHistory.length;
+
+      const dates = sessionHistory.slice(-7).map(h => h.date).reverse();
+      const hitRates = sessionHistory.slice(-7).map(h => h.hitRate).reverse();
+
+      const ctxTrend = document.getElementById('chartTrend')?.getContext('2d');
+      if (ctxTrend) {
+        if (chartTrendInstance) chartTrendInstance.destroy();
+        chartTrendInstance = new Chart(ctxTrend, {
+          type: 'line',
+          data: {
+            labels: dates.length > 0 ? dates : ['기록 대기'],
+            datasets: [{
+              label: '적중률 (%)',
+              data: hitRates.length > 0 ? hitRates : [0],
+              borderColor: '#0D9488',
+              backgroundColor: 'rgba(13, 148, 136, 0.12)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.35,
+              pointBackgroundColor: '#0F766E',
+              pointRadius: 5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { min: 0, max: 100 }
+            }
+          }
+        });
+      }
+
+      // Miss Reasons Aggregation
+      let tFront = 0, tBack = 0, tShort = 0, tLong = 0;
+      sessionHistory.forEach(h => {
+        if (h.missReasons) {
+          tFront += h.missReasons.front || 0;
+          tBack += h.missReasons.back || 0;
+          tShort += h.missReasons.short || 0;
+          tLong += h.missReasons.long || 0;
+        }
+      });
+
+      const ctxMiss = document.getElementById('chartMissReasons')?.getContext('2d');
+      if (ctxMiss) {
+        if (chartMissInstance) chartMissInstance.destroy();
+        chartMissInstance = new Chart(ctxMiss, {
+          type: 'doughnut',
+          data: {
+            labels: ['앞남(前)', '뒤남(後)', '단(短)', '장(長)'],
+            datasets: [{
+              data: [tFront || 5, tBack || 4, tShort || 6, tLong || 3],
+              backgroundColor: ['#F43F5E', '#F59E0B', '#0284C7', '#8B5CF6']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+
+      // Pacing chart (Rounds 1~9 averages)
+      const roundHitsAccum = Array(9).fill(0);
+      let sessionCount = 0;
+      sessionHistory.forEach(h => {
+        if (h.roundHits && h.roundHits.length === 9) {
+          sessionCount++;
+          h.roundHits.forEach((v, idx) => roundHitsAccum[idx] += v);
+        }
+      });
+      const pacingAvg = roundHitsAccum.map(v => sessionCount > 0 ? (v / sessionCount).toFixed(1) : 3);
+
+      const ctxPacing = document.getElementById('chartPacing')?.getContext('2d');
+      if (ctxPacing) {
+        if (chartPacingInstance) chartPacingInstance.destroy();
+        chartPacingInstance = new Chart(ctxPacing, {
+          type: 'bar',
+          data: {
+            labels: ['1순', '2순', '3순', '4순', '5순', '6순', '7순', '8순', '9순'],
+            datasets: [{
+              label: '순별 평균 관중수 (5시 만점)',
+              data: pacingAvg,
+              backgroundColor: '#10B981',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { min: 0, max: 5 }
+            }
+          }
+        });
+      }
+    }
+
+    function switchTab(tab) {
+      const views = ['archers', 'shoot', 'advice', 'siji', 'history', 'analytics', 'jeonbuk'];
+      views.forEach(v => {
+        const el = document.getElementById(`view${v.charAt(0).toUpperCase() + v.slice(1)}`);
+        const btn = document.getElementById(`tabBtn-${v}`);
+        if (el) el.classList.add('hidden');
+        if (btn) {
+          btn.className = 'nav-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition flex items-center space-x-1.5 whitespace-nowrap';
+        }
+      });
+
+      const activeEl = document.getElementById(`view${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+      const activeBtn = document.getElementById(`tabBtn-${tab}`);
+      if (activeEl) activeEl.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.className = 'nav-tab active-tab px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center space-x-1.5 whitespace-nowrap bg-teal-700 text-white shadow-xs';
+      }
+
+      if (tab === 'siji') renderSiji();
+      else if (tab === 'history') renderHistoryList();
+      else if (tab === 'advice') renderAdviceView();
+      else if (tab === 'analytics') renderAnalyticsCharts();
+      else if (tab === 'archers') renderArchersCardGrid();
+
+      lucide.createIcons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* Sound Synthesizer via Web Audio API */
+    function playSound(type) {
+      if (!audioEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'hit') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(580, now);
+          osc.frequency.exponentialRampToValueAtTime(160, now + 0.2);
+          gain.gain.setValueAtTime(0.85, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.24);
+        } else if (type === 'miss') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(55, now + 0.2);
+          gain.gain.setValueAtTime(0.5, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'molgi') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.35, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.35);
+          });
+        }
+      } catch (err) {
+        console.debug('Audio skipped', err);
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.getElementById('soundIcon');
+      if (icon) {
+        icon.setAttribute('data-lucide', audioEnabled ? 'volume-2' : 'volume-x');
+        lucide.createIcons();
+      }
+      showToast(audioEnabled ? '사대 타격 효과음이 켜졌습니다.' : '효과음이 꺼졌습니다.');
+    }
+
+    function triggerConfetti(intensity = 0.5) {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: Math.floor(70 * intensity),
+          spread: 60,
+          origin: { y: 0.7 }
+        });
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      const text = document.getElementById('toastMessage');
+      if (!toast || !text) return;
+      text.textContent = msg;
+      toast.classList.remove('translate-y-16', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-16', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2600);
+    }
+  </script>
+</body>
+</html>
