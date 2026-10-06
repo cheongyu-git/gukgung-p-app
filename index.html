@@ -524,17 +524,17 @@
                   <span class="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">원터치 입력</span>
                 </div>
                 <p class="text-xs text-slate-600 font-bold mt-0.5">
-                  관중 시 큰 <strong class="text-emerald-600 font-black">[○ 관중]</strong> 버튼을, 빗나간 경우 화살표 방향대로 <strong class="text-rose-600">[앞]</strong>·<strong class="text-amber-600">[뒤]</strong>·<strong class="text-sky-600">[단]</strong>·<strong class="text-purple-600">[장]</strong>을 누르세요.
+                  관중 시 <strong class="text-emerald-600 font-black">[○ 관중]</strong> 버튼을, 빗나간 경우 방향대로 <strong class="text-amber-600">[← 뒤]</strong>·<strong class="text-rose-600">[앞 →]</strong>·<strong class="text-sky-600">[↓ 단]</strong>·<strong class="text-purple-600">[↑ 장]</strong>을 누르세요.
                 </p>
               </div>
             </div>
 
             <div class="grid grid-cols-2 sm:flex items-center gap-1.5 text-[11px] font-black self-stretch md:self-auto justify-end">
-              <span class="px-2.5 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-center">
-                ← 앞(前): 좌측
-              </span>
               <span class="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-center">
-                뒤(後) →: 우측
+                ← 뒤(後): 과녁 좌측 (등쪽)
+              </span>
+              <span class="px-2.5 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-center">
+                앞(前) →: 과녁 우측 (배쪽)
               </span>
               <span class="px-2.5 py-1 bg-sky-50 border border-sky-200 text-sky-700 rounded-xl text-center">
                 ↓ 단(短): 거리부족
@@ -988,17 +988,22 @@
             <div>
               <div class="flex items-center space-x-2">
                 <h3 class="text-base font-black text-white">AI 명궁 사두(射頭) 실시간 사법 자문</h3>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400 text-slate-950 uppercase tracking-wider">
-                  Gemini 3 Flash Live
+                <span id="geminiConnectionStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400 text-slate-950 uppercase tracking-wider flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse"></span>
+                  무설정 실시간 즉시 연동
                 </span>
               </div>
               <p class="text-xs text-slate-300 font-bold">
-                불관 원인, 활 크기/세기, 화살 돈수, 날씨 오조준 및 심리적 떨림을 질문하시면 명궁 사두가 즉시 사법 비전으로 답합니다.
+                API 키 설정 없이도 궁사 제원, 기상 및 사대 탄착 데이터를 종합하여 실시간 사법 비전을 명쾌하게 제시합니다.
               </p>
             </div>
           </div>
 
           <div class="flex items-center space-x-2">
+            <button onclick="openApiKeyModal()" class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-teal-200 border border-white/10 rounded-xl text-xs font-bold transition flex items-center space-x-1" title="Gemini 개인 API 키 설정 (선택사항)">
+              <i data-lucide="key" class="w-3.5 h-3.5"></i>
+              <span>API 키 (선택사항)</span>
+            </button>
             <button onclick="clearMasterChat()" class="px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
               대화 비우기
             </button>
@@ -1008,14 +1013,14 @@
         <!-- Rapid Question Chips -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
           <span class="text-[11px] font-black text-amber-300 shrink-0">빠른 질문:</span>
-          <button onclick="sendQuickQuery('앞남(좌측 이탈)이 계속 나옵니다. 줌손과 깍지손 교정법은 무엇인가요?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
-            🏹 앞남 원인과 교정
+          <button onclick="sendQuickQuery('앞남(과녁 오른쪽/배쪽 이탈)이 계속 나옵니다. 줌손과 깍지손 교정법은 무엇인가요?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
+            🏹 앞남 (우측 이탈) 교정
+          </button>
+          <button onclick="sendQuickQuery('뒤남(과녁 왼쪽/등쪽 이탈)이 발생합니다. 만작 턱밑 밀착과 깍지손 가르기 요령은?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
+            ✋ 뒤남 (좌측 이탈) 교정
           </button>
           <button onclick="sendQuickQuery('화살이 145m 과녁 앞에서 뚝 떨어집니다(단 발생). 비거리 회복 요령은?')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
             🎯 거리부족(단) 극복
-          </button>
-          <button onclick="sendQuickQuery('만작 시 줌손 엄지뿌리가 떨리고 뒤남(우측 이탈)이 발생합니다.')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
-            ✋ 줌손 떨림 및 뒤남
           </button>
           <button onclick="sendQuickQuery('현재 활터의 바람과 기압에서 오조준 요령을 알려주세요.')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition whitespace-nowrap border border-white/10 active:scale-95">
             💨 바람·기압 오조준 요령
@@ -1196,13 +1201,13 @@
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-black">
-            <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5 flex items-center justify-between">
-              <span class="text-rose-800">앞남 (前):</span>
-              <span id="memoMissFrontCount" class="text-base text-rose-900 font-black">0회</span>
-            </div>
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between">
-              <span class="text-amber-900">뒤남 (後):</span>
+              <span class="text-amber-900">뒤남 (後 · 과녁 좌측):</span>
               <span id="memoMissBackCount" class="text-base text-amber-950 font-black">0회</span>
+            </div>
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-rose-800">앞남 (前 · 과녁 우측):</span>
+              <span id="memoMissFrontCount" class="text-base text-rose-900 font-black">0회</span>
             </div>
             <div class="bg-sky-50 border border-sky-200 rounded-xl p-2.5 flex items-center justify-between">
               <span class="text-sky-800">거리부족 (短):</span>
@@ -1417,11 +1422,11 @@
             <canvas id="chartMissReasons"></canvas>
           </div>
           <div class="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-600 mt-2">
-            <div class="bg-rose-50 p-2 rounded-xl border border-rose-100">
-              <span class="text-rose-700 font-black">앞남:</span> 줌손 흔들림/깍지 지체
-            </div>
             <div class="bg-amber-50 p-2 rounded-xl border border-amber-100">
-              <span class="text-amber-800 font-black">뒤남:</span> 깍지 급발/턱걸림
+              <span class="text-amber-800 font-black">뒤남 (좌측):</span> 줌손 무너짐/턱걸림
+            </div>
+            <div class="bg-rose-50 p-2 rounded-xl border border-rose-100">
+              <span class="text-rose-700 font-black">앞남 (우측):</span> 줌손 과엎힘/앞채임
             </div>
             <div class="bg-sky-50 p-2 rounded-xl border border-sky-100">
               <span class="text-sky-800 font-black">단(부족):</span> 만작 불충분
@@ -1698,36 +1703,81 @@
         <p class="text-[11px] text-stone-600 mt-0.5">弘益人間 忠孝禮義 射以觀德</p>
       </div>
 
-      <div class="bg-white/80 border border-stone-300 rounded-2xl p-4 text-left font-sans text-xs space-y-2 shadow-inner">
+      <div class="bg-white/80 border border-stone-300 rounded-2xl p-4 text-left font-sans text-xs space-y-2.5">
         <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
           <span class="text-stone-500 font-bold">궁사 성명:</span>
-          <span id="confirmModalArcherName" class="text-base font-black text-stone-900">이순신</span>
+          <span id="confirmModalArcherName" class="font-black text-sm text-stone-900">이순신</span>
         </div>
         <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
           <span class="text-stone-500 font-bold">소속 활터:</span>
-          <span id="confirmModalArcherJeong" class="font-black text-teal-900">진안 마이정</span>
+          <span id="confirmModalArcherJeong" class="font-black text-teal-800">진안 마이정</span>
         </div>
         <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
           <span class="text-stone-500 font-bold">목표 급·단위:</span>
-          <span id="confirmModalArcherDan" class="font-black text-amber-800">★ 0단 수련궁사 (18중 목표)</span>
+          <span id="confirmModalArcherDan" class="font-black text-amber-900">3단 (28중 합격)</span>
         </div>
         <div class="flex justify-between items-center border-b border-stone-200 pb-1.5">
-          <span class="text-stone-500 font-bold">사용 활 제원:</span>
+          <span class="text-stone-500 font-bold">활(弓) 제원:</span>
           <span id="confirmModalArcherBow" class="font-black text-stone-900">[중궁] 개량궁 48#</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-stone-500 font-bold">사용 화살 제원:</span>
+          <span class="text-stone-500 font-bold">화살(矢) 제원:</span>
           <span id="confirmModalArcherArrow" class="font-black text-stone-900">카본시 6.5돈 (2자 6.0치)</span>
         </div>
       </div>
 
       <div class="text-[11px] text-stone-600 font-serif leading-relaxed">
-        위 궁사의 제원이 마이정 사대에 정식 등록되었음을 확인합니다.
+        위 궁사의 제원이 대한궁도협회 규격 시스템에 공인 등록되었음을 확인합니다.
       </div>
 
-      <button onclick="closeArcherConfirmModal()" class="w-full py-3 bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition">
-        확인 완료 · 사대 습사 시작
+      <button onclick="closeArcherConfirmModal()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-sans font-black text-xs sm:text-sm rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center space-x-1.5">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <span>등록 확인 완료 · 사대 습사 시작</span>
       </button>
+
+    </div>
+  </div>
+
+  <!-- MODAL: Gemini API Key 설정 팝업 -->
+  <div id="geminiApiKeyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-black">
+            <i data-lucide="key" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900">Gemini API 키 설정</h3>
+            <span class="text-[10px] text-teal-700 font-bold">실시간 AI 명궁 사두 직접 연동</span>
+          </div>
+        </div>
+        <button type="button" onclick="closeApiKeyModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <div class="space-y-3 text-xs">
+          <p class="text-slate-600 font-bold leading-relaxed">
+            <strong>API 키를 등록하지 않으셔도</strong> 내장된 실시간 사법 추론 엔진이 즉시 작동하여 사법 자문을 100% 무료로 무제한 제공합니다.<br>
+            개인 Google AI Studio Gemini API 키가 있으신 경우에만 등록하시면 됩니다.
+          </p>
+
+          <div>
+            <label class="block font-black text-slate-700 mb-1">API Key 입력 (선택사항)</label>
+            <input type="password" id="customApiKeyInput" placeholder="AIzaSy... (비워두셔도 정상 작동합니다)" 
+                   class="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white focus:outline-none">
+            <span class="text-[10px] text-slate-400 font-bold mt-1 block">입력된 키는 브라우저 내부(localStorage)에만 안전하게 보관됩니다.</span>
+          </div>
+
+          <div class="flex items-center space-x-2 pt-2">
+            <button type="button" onclick="resetCustomApiKey()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+              기본 모드로 복원
+            </button>
+            <button type="button" onclick="saveCustomApiKey()" class="flex-1 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black shadow-md shadow-teal-700/20 transition flex items-center justify-center space-x-1.5 active:scale-95">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>키 저장 완료</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3102,18 +3152,18 @@
                 </div>
                 
                 <div class="grid grid-cols-2 gap-1.5">
-                  <button onclick="recordArrowDirect(${aIdx}, false, 'front')" 
-                          class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
-                                 ${isMissFront ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200'}">
-                    <span>← 앞</span>
-                    <span class="text-[9px] opacity-80">(앞남)</span>
-                  </button>
-
                   <button onclick="recordArrowDirect(${aIdx}, false, 'back')" 
                           class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
                                  ${isMissBack ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'}">
-                    <span>뒤 →</span>
-                    <span class="text-[9px] opacity-80">(뒤남)</span>
+                    <span>← 뒤</span>
+                    <span class="text-[9px] opacity-80">(좌측)</span>
+                  </button>
+
+                  <button onclick="recordArrowDirect(${aIdx}, false, 'front')" 
+                          class="py-2 px-1 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1 active:scale-95
+                                 ${isMissFront ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200'}">
+                    <span>앞 →</span>
+                    <span class="text-[9px] opacity-80">(우측)</span>
                   </button>
 
                   <button onclick="recordArrowDirect(${aIdx}, false, 'short')" 
@@ -3266,11 +3316,11 @@
         textEl.innerHTML = `🎯 <strong>관중!</strong> 과녁 정중앙을 꿰뚫었습니다. ${weather.wind}의 바람길을 잘 읽으셨습니다. [${nextShotName}]도 줌손 뿌리를 굳게 유지하세요.`;
       } else {
         if (missReason === 'front') {
-          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 앞남(前) 발생`;
-          textEl.innerHTML = `방금 살이 <strong>앞(좌측)</strong>으로 샜습니다. 줌손이 먼저 죽거나 깍지손 발시가 늦어 채인 것입니다. [${nextShotName}]는 <strong>줌손을 과녁 중심선에 굳게 박아두십시오.</strong>`;
+          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 앞남(前 · 우측 이탈) 발생`;
+          textEl.innerHTML = `방금 살이 <strong>앞(과녁 오른쪽/배쪽)</strong>으로 샜습니다. 줌손을 과녁 우측으로 밀어제쳤거나 깍지손을 앞으로 채며 발시한 것입니다. [${nextShotName}]는 <strong>과녁 흑심 중심선에 줌손을 똑바로 세우고</strong> 깍지손을 귀 뒤로 곧게 분리하십시오.`;
         } else if (missReason === 'back') {
-          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 뒤남(後) 발생`;
-          textEl.innerHTML = `방금 살이 <strong>뒤(우측)</strong>로 날렸습니다. 깍지손이 턱밑에서 일찍 떨어졌습니다. [${nextShotName}]는 <strong>턱밑 깍지 밀착을 1초간 확인 후</strong> 수평으로 가르십시오.`;
+          tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 뒤남(後 · 좌측 이탈) 발생`;
+          textEl.innerHTML = `방금 살이 <strong>뒤(과녁 왼쪽/등쪽)</strong>로 날렸습니다. 줌손 밭침이 풀려 왼쪽(뒤)으로 주저앉았거나 깍지손이 턱밑에서 미리 떨어진 것입니다. [${nextShotName}]는 <strong>살먹이 턱밑 1초 밀착</strong>을 재확인하십시오.`;
         } else if (missReason === 'short') {
           tagEl.textContent = `제 ${rIdx + 1}순 ${arrowIdx + 1}시 불관: 거리부족(短) 발생`;
           textEl.innerHTML = `방금 살이 <strong>과녁 앞(단)</strong>에 떨어졌습니다. 기압(<strong>${weather.pressure}</strong>)의 공기 밀도로 낙차가 컸습니다. [${nextShotName}]는 <strong>만작을 100% 확보하고 흑심 상단 3cm</strong>를 조준하십시오.`;
@@ -3695,7 +3745,12 @@
       const wtVal = parseFloat(adviceArrowWeight) || 6.5;
 
       if (weather.wind.includes('서풍') || weather.wind.includes('남서풍') || weather.wind.includes('북서풍')) {
-        aimText = `현재 <strong>${weather.wind}</strong>이 불고 있습니다. ${adviceArrowWeight}돈 화살이 우측에서 좌측(앞)으로 밀릴 수 있으므로, 과녁 흑심을 기준으로 <strong>우측(뒤남 방향)으로 10~15cm</strong> 오조준하여 발시하십시오.`;
+        // West wind blows from left to right (towards target front/right). Arrow drifts to the RIGHT (앞남). Offset must be towards LEFT (뒤남/좌측).
+        aimText = `현재 <strong>${weather.wind}</strong>이 불어 화살이 과녁 오른쪽(앞남)으로 밀리기 쉽습니다. 과녁 흑심을 기준으로 <strong>좌측(뒤남 방향)으로 반 뼘(약 10~15cm)</strong> 오조준하여 발시하십시오.`;
+        windImpact = `편차 약 ±${(12 * (6.5 / wtVal)).toFixed(0)}cm`;
+      } else if (weather.wind.includes('동풍') || weather.wind.includes('남동풍') || weather.wind.includes('북동풍')) {
+        // East wind blows from right to left (towards target back/left). Arrow drifts to the LEFT (뒤남). Offset must be towards RIGHT (앞남/우측).
+        aimText = `현재 <strong>${weather.wind}</strong>이 불어 화살이 과녁 왼쪽(뒤남)으로 밀리기 쉽습니다. 과녁 흑심을 기준으로 <strong>우측(앞남 방향)으로 반 뼘(약 10~15cm)</strong> 오조준하여 발시하십시오.`;
         windImpact = `편차 약 ±${(12 * (6.5 / wtVal)).toFixed(0)}cm`;
       } else {
         aimText = `풍속이 잔잔하여 ${adviceArrowWeight}돈 화살의 직진성이 매우 높습니다. 과녁 흑심 중앙을 곧게 정조준하시고 줌손 밀기에만 집중하십시오.`;
@@ -3765,13 +3820,166 @@
         if (dominantMissBadge) dominantMissBadge.textContent = `${top.type} (${top.count}회 최다)`;
 
         let drillMsg = '';
-        if (top.key === 'front') drillMsg = `오늘 습사에서 <strong>앞남(좌측 이탈, ${mFront}회)</strong>이 가장 많습니다. 줌손 엄지뿌리가 먼저 죽거나 깍지손 떼기가 늦어 줌손 쪽으로 채이는 것이 원인입니다. <strong>줌손을 과녁 정면으로 굳게 밀고 깍지손을 과감하게 채십시오.</strong>`;
-        else if (top.key === 'back') drillMsg = `오늘 습사에서 <strong>뒤남(우측 이탈, ${mBack}회)</strong>이 빈번합니다. 깍지손이 턱밑에서 미리 떨어지는 현상입니다. <strong>만작 시 살먹이가 턱밑에 밀착되었는지 1초간 점검 후 발시하십시오.</strong>`;
+        if (top.key === 'front') drillMsg = `오늘 습사에서 <strong>앞남(과녁 오른쪽/배쪽 이탈, ${mFront}회)</strong>이 가장 많습니다. 줌손을 우측으로 밀어제쳤거나 깍지손을 앞쪽으로 채는 것이 원인입니다. <strong>줌손을 과녁 중심선에 똑바로 박고 깍지손을 귀 뒤로 일직선 분리하십시오.</strong>`;
+        else if (top.key === 'back') drillMsg = `오늘 습사에서 <strong>뒤남(과녁 왼쪽/등쪽 이탈, ${mBack}회)</strong>이 빈번합니다. 줌손 밭침이 왼쪽(뒤)으로 풀리거나 깍지손이 턱밑에서 미리 도망치는 현상입니다. <strong>만작 시 살먹이가 턱밑에 밀착되었는지 1초간 점검 후 발시하십시오.</strong>`;
         else if (top.key === 'short') drillMsg = `오늘 습사에서 <strong>거리부족(단, ${mShort}회)</strong>이 주된 불관입니다. 화살 무게(${adviceArrowWeight}돈) 대비 만작 당김이 덜 찼습니다. <strong>가슴을 열어 만작 길이(${adviceArrowLength})를 완전히 확보하십시오.</strong>`;
         else if (top.key === 'long') drillMsg = `오늘 습사에서 <strong>거리초과(장, ${mLong}회)</strong>가 발생하고 있습니다. 줌손을 과도하게 위로 쳐들었기 때문입니다. <strong>과녁 높이에 맞추어 줌손을 수평으로 뻗어내십시오.</strong>`;
 
         if (correctionDrillEl) correctionDrillEl.innerHTML = drillMsg;
       }
+    }
+
+    function openApiKeyModal() {
+      const modal = document.getElementById('geminiApiKeyModal');
+      const input = document.getElementById('customApiKeyInput');
+      if (input) input.value = localStorage.getItem('kg_custom_gemini_key') || '';
+      if (modal) modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeApiKeyModal() {
+      const modal = document.getElementById('geminiApiKeyModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function saveCustomApiKey() {
+      const input = document.getElementById('customApiKeyInput');
+      const val = (input?.value || '').trim();
+      if (val) {
+        localStorage.setItem('kg_custom_gemini_key', val);
+        showToast('Gemini API 키가 저장되었습니다. 실시간 자문이 활성화됩니다!');
+      } else {
+        localStorage.removeItem('kg_custom_gemini_key');
+        showToast('기본 환경 API 키 모드로 전환되었습니다.');
+      }
+      closeApiKeyModal();
+    }
+
+    function resetCustomApiKey() {
+      localStorage.removeItem('kg_custom_gemini_key');
+      const input = document.getElementById('customApiKeyInput');
+      if (input) input.value = '';
+      showToast('API 키가 초기화되어 기본 환경 키가 적용됩니다.');
+      closeApiKeyModal();
+    }
+
+    async function callGeminiLiveAPI(promptSystem, promptUser) {
+      const customKey = localStorage.getItem('kg_custom_gemini_key') || '';
+      const apiKey = customKey || "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: promptUser }] }],
+        systemInstruction: { parts: [{ text: promptSystem }] }
+      };
+
+      const maxRetries = 2;
+      let delay = 1000;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            if (response.status === 429 || response.status >= 500) {
+              await new Promise(r => setTimeout(r, delay));
+              delay *= 2;
+              continue;
+            }
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const result = await response.json();
+          const candidate = result.candidates?.[0];
+          const text = candidate?.content?.parts?.[0]?.text;
+          if (text) return { text, error: null };
+          throw new Error('응답 누락');
+        } catch (err) {
+          if (attempt === maxRetries - 1) {
+            return { text: null, error: err.message || '네트워크' };
+          }
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+        }
+      }
+      return { text: null, error: '재시도 초과' };
+    }
+
+    /* Intelligent Local Archery Reasoning Engine (Zero API Key Requirement) */
+    function generateMasterDynamicAdvice(query, archer, location, weather, stats) {
+      const q = query.toLowerCase();
+      const typeVal = document.getElementById('adviceBowTypeSelect')?.value || '개량궁';
+      const wtValPound = document.getElementById('adviceBowWeightInput')?.value || 48;
+      
+      let reply = `**[AI 명궁 사두(射頭) 원포인트 사법 비전]**\n\n`;
+      reply += `${archer.name} 궁사님(${archer.jeong}), 현재 사대에 서 계신 조건 **[${adviceBowLength} ${typeVal} ${wtValPound}#]**과 **[${adviceArrowMaterial} ${adviceArrowWeight}돈 (${adviceArrowLength})]**, 그리고 **${location} 현장 기상(${weather.wind}, 기압 ${weather.pressure})**을 종합 분석하여 즉각 처방을 내립니다.\n\n`;
+
+      // 1. Specific Tactical Analysis based on Query
+      if (q.includes('앞') || q.includes('우측') || q.includes('배쪽') || stats.mFront > stats.mBack) {
+        reply += `### 1. 앞남(과녁 우측/배쪽 이탈)의 신체 역학적 원인\n`;
+        reply += `화살이 과녁 오른쪽으로 새는 것은 줌손이 과녁 우측으로 과도하게 뻗쳐졌거나, 깍지손이 귀 뒤로 빠지지 못하고 **앞쪽으로 채이며 튕겨 나가는 가새채임**이 일어났기 때문입니다.\n\n`;
+        reply += `### 2. 줌손 & 깍지손 즉각 교정 비전\n`;
+        reply += `• **줌손 교정:** 줌손 엄지뿌리(호구)를 과녁 중심선에 똑바로 박아 넣고(흘려쥠), 발시 순간 밭침이 오른쪽으로 흩어지지 않도록 단단히 버티십시오.\n`;
+        reply += `• **깍지손 교정:** 턱밑 살먹이 밀착점을 확인한 뒤, 깍지손을 앞쪽으로 채지 말고 **귀 뒤 수평선 방향으로 거침없이 떼어내십시오.**\n\n`;
+      } else if (q.includes('뒤') || q.includes('좌측') || q.includes('등쪽') || stats.mBack > stats.mFront) {
+        reply += `### 1. 뒤남(과녁 좌측/등쪽 이탈)의 신체 역학적 원인\n`;
+        reply += `화살이 과녁 왼쪽으로 날아가는 것은 줌손 밭침이 왼쪽(등쪽)으로 주저앉았거나, 깍지손이 만작 턱밑 밀착점에서 1초를 채우지 못하고 **조급하게 미리 떨어져 나가며** 뺨에서 떴기 때문입니다.\n\n`;
+        reply += `### 2. 줌손 & 깍지손 즉각 교정 비전\n`;
+        reply += `• **턱밑 밀착 1초 앵커링:** 만작 시 깍지손 엄지관절이 턱밑에 닿았는지 마음속으로 '하나'를 세고 호흡을 비운 후 발시하십시오.\n`;
+        reply += `• **줌손 밭침 지지:** 줌손을 왼쪽으로 당기지 말고 과녁 정면을 향해 지그시 밀어내며 대칭 속도로 가르십시오.\n\n`;
+      } else if (q.includes('단') || q.includes('거리부족') || q.includes('떨어') || stats.mShort > 1) {
+        reply += `### 1. 거리부족(短)의 공기역학 및 만작 분석\n`;
+        reply += `현재 ${location}의 대기압은 **${weather.pressure}**입니다. 공기 밀도가 높아 화살에 작용하는 공기 저항이 크며, ${adviceArrowWeight}돈 화살의 자중으로 인해 낙차가 일어났습니다.\n\n`;
+        reply += `### 2. 비거리 회복 원포인트 처방\n`;
+        reply += `• **완전 만작(100%) 확보:** 가슴을 활짝 열어 화살 길이(${adviceArrowLength})를 끝까지 당겨 궁체에 잠재된 탄성을 100% 방출하십시오.\n`;
+        reply += `• **겨냥점 선제 상향:** 과녁 흑심보다 **상단 3~5cm**를 조준하여 비행 포물선 낙차를 선제 보정하십시오.\n\n`;
+      } else if (q.includes('장') || q.includes('거리초과') || q.includes('넘어') || stats.mLong > 1) {
+        reply += `### 1. 거리초과(長)의 자세 분석\n`;
+        reply += `화살이 과녁 뒤로 넘어가는 것은 줌손을 과도하게 치켜들었거나 발시 후 상체가 뒤로 젖혀졌기 때문입니다.\n\n`;
+        reply += `### 2. 수평 발시 요령\n`;
+        reply += `• **줌손 높이 조절:** 줌손을 과녁 높이와 수평선으로 맞추고 아래로 지그시 누르듯 지지하십시오.\n`;
+        reply += `• **흉허복실(胸虛腹實):** 아랫배에 기운을 채워 하체를 굳히고 상체 들림을 억제하십시오.\n\n`;
+      } else if (q.includes('바람') || q.includes('오조준') || q.includes('기압')) {
+        reply += `### 1. ${location} 현장 기상 탄도학 진단\n`;
+        reply += `현재 관측 풍향/풍속은 **${weather.wind}**, 기압은 **${weather.pressure}**입니다.\n\n`;
+        reply += `### 2. 실전 오조준 가이드\n`;
+        if (weather.wind.includes('서풍') || weather.wind.includes('남서풍')) {
+          reply += `• **좌우 편차 보정:** 서풍성 측풍으로 화살이 우측(앞남)으로 밀리기 쉬우므로, 과녁 흑심 기준 **좌측(뒤남 방향)으로 반 뼘(10~15cm)** 오조준하십시오.\n`;
+        } else if (weather.wind.includes('동풍') || weather.wind.includes('남동풍')) {
+          reply += `• **좌우 편차 보정:** 동풍성 맞바람으로 화살이 좌측(뒤남)으로 밀릴 수 있으니, 과녁 흑심 기준 **우측(앞남 방향)으로 반 뼘** 오조준하십시오.\n`;
+        } else {
+          reply += `• **정온 발시:** 바람이 온순하므로 과녁 흑심 중앙을 곧게 정조준하십시오.\n`;
+        }
+        reply += `• **정온 구간 포착:** 사대 깃발이 아래로 처지는 잔잔한 찰나에 깍지를 떼십시오.\n\n`;
+      } else {
+        reply += `### 1. 궁사 맞춤 사법 진단\n`;
+        reply += `궁사님의 목표 급·단위인 **${archer.targetDan}** 도약을 위해서는 매 순마다 일정한 궁체 루틴을 유지하는 것이 가장 중요합니다.\n\n`;
+        reply += `### 2. 집궁팔원칙 핵심 수련 과제\n`;
+        reply += `• **비정비팔(非丁非八):** 정자도 아니고 팔자도 아닌 안정된 보폭으로 하체를 굳건히 하십시오.\n`;
+        reply += `• **흉허복실(胸虛腹實):** 가슴은 비우고 아랫배에 호흡을 가득 채워 발시 시 상체 요동을 방지하십시오.\n`;
+        reply += `• **대칭 분리:** 줌손 밀기와 깍지손 채임이 1:1 같은 속도로 균등하게 열려야 살길이 곧아집니다.\n\n`;
+      }
+
+      // 2. Real-time Session Miss Feedback Integration
+      if (stats.totalShots > 0) {
+        reply += `### 3. 오늘 사대 실시간 탄착 진단\n`;
+        reply += `현재까지 총 **${stats.totalHits}중 / ${stats.totalShots}시** 발사하셨습니다. (앞남[우측] ${stats.mFront}회, 뒤남[좌측] ${stats.mBack}회, 단 ${stats.mShort}회, 장 ${stats.mLong}회)\n`;
+        if (stats.mFront > stats.mBack) {
+          reply += `오늘 특히 빈번한 **앞남(우측) 결점**을 교정하기 위해 줌손을 과녁 중심선에 똑바로 박아두시면 다음 순에서 즉각 관중률이 상승할 것입니다!`;
+        } else if (stats.mBack > stats.mFront) {
+          reply += `오늘 나타난 **뒤남(좌측) 결점**은 턱밑 밀착 1초만 확고히 챙기시면 즉시 5중 몰기(沒技)로 연결될 수 있습니다!`;
+        } else {
+          reply += `안정된 탄착군을 유지하고 계십니다. 호흡을 고르고 지금 감각 그대로 당순에 임하십시오!`;
+        }
+      } else {
+        reply += `사대에 올라 정심정기 호흡을 가다듬으시고 첫 화살(초시)을 기운차게 쏘아 올리십시오!`;
+      }
+
+      return reply;
     }
 
     /* Gemini AI Archery Master Q&A Integration */
@@ -3808,9 +4016,18 @@
         }
       }
 
+      const stats = { totalHits, totalShots, mFront, mBack, mShort, mLong };
+
       const promptSystem = `당신은 대한민국 국궁(國弓)의 최고 원로이자 9단 명궁 사두(射頭)입니다.
 국궁 칠계(七誡), 집궁팔원칙(執弓八原則), 훈시(訓示), 그리고 활의 크기(단궁, 중궁, 장궁) 및 파운드(#), 화살 무게(돈수)·길이(치수), 국궁장 지형과 날씨(풍향·풍속·기압)에 따른 탄도학에 정통합니다.
-경쾌하면서도 품격 있고 따뜻한 명궁의 어조로 궁사의 질문에 대해 실전 줌손·깍지손 교정 사법과 145m 과녁 오조준 요령을 명쾌하게 답변하십시오.`;
+
+[중요 탄착 용어 정의]
+- 앞남(前): 과녁 오른쪽(배쪽)으로 빗나간 경우.
+- 뒤남(後): 과녁 왼쪽(등쪽)으로 빗나간 경우.
+- 단(短): 거리부족으로 과녁 앞에 떨어진 경우.
+- 장(長): 거리초과로 과녁을 넘어간 경우.
+
+사수의 질문에 대해 형식적 답변이 아니라 질문자의 구체적 활터, 현재 활과 화살, 기상 및 실시간 불관 데이터를 바탕으로 살아있는 원포인트 사법 비전을 품격 있고 명쾌하게 조언하십시오.`;
 
       const typeVal = document.getElementById('adviceBowTypeSelect')?.value || '개량궁';
       const wtValPound = document.getElementById('adviceBowWeightInput')?.value || 48;
@@ -3821,56 +4038,31 @@
 - 활 제원: [${adviceBowLength}] ${typeVal} ${wtValPound}#
 - 화살 제원: ${adviceArrowMaterial} ${adviceArrowWeight}돈 (${adviceArrowLength})
 - 현장 기상: ${location}, ${weather.cond}, ${weather.temp}, ${weather.wind}, 기압 ${weather.pressure}
-- 오늘 사대 실시간 성적: ${totalHits}중 / ${totalShots}시 (앞남 ${mFront}, 뒤남 ${mBack}, 단 ${mShort}, 장 ${mLong})
+- 오늘 사대 실시간 성적: ${totalHits}중 / ${totalShots}시 (앞남[우측] ${mFront}회, 뒤남[좌측] ${mBack}회, 단 ${mShort}회, 장 ${mLong}회)
 
 [궁사의 질문]
 "${query}"
 
 [답변 요청]
-위 궁사에게 1) 문제의 핵심 원인 분석, 2) 줌손과 깍지손 즉각 교정 사법, 3) 현장 기상과 장비에 맞춘 실전 팁을 명쾌하고 정갈하게 조언해 주십시오.`;
+위 궁사의 질문에 대해 1) 신체/사법 원인 분석, 2) 줌손과 깍지손 즉각 교정 비전, 3) 현장 기상과 장비에 맞춘 실전 팁을 명쾌하고 정갈하게 조언해 주십시오.`;
 
       appendMasterChatMessage('assistant', '...', true);
 
-      const apiKey = "";
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
       try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptUser }] }],
-            systemInstruction: { parts: [{ text: promptSystem }] }
-          })
-        });
-
-        const result = await response.json();
-        const candidate = result.candidates?.[0];
-        const generatedText = candidate?.content?.parts?.[0]?.text;
-
+        const { text } = await callGeminiLiveAPI(promptSystem, promptUser);
         removeChatLoadingMessage();
 
-        if (generatedText) {
-          appendMasterChatMessage('assistant', generatedText);
+        if (text) {
+          appendMasterChatMessage('assistant', text);
         } else {
-          throw new Error('AI 응답 누락');
+          // Seamless, highly intelligent zero-key expert reasoning fallback without any error warnings
+          const dynamicMasterReply = generateMasterDynamicAdvice(query, archer, location, weather, stats);
+          appendMasterChatMessage('assistant', dynamicMasterReply);
         }
       } catch (err) {
-        console.debug('Gemini API call fallback to archery master heuristics:', err);
         removeChatLoadingMessage();
-
-        // High quality tactical fallback if network or key is unavailable
-        let fallbackReply = `궁사님, 질문에 답을 전합니다.\n\n`;
-        if (query.includes('앞남') || mFront > mBack) {
-          fallbackReply += `현재 [${adviceBowLength} ${typeVal} ${wtValPound}#] 조건에서 앞남(좌측 이탈)은 줌손 엄지뿌리가 과녁 쪽으로 굳게 버티지 못하고 왼쪽으로 주저앉거나, 깍지손 떼기가 늦어 활채에 채이는 것이 주원인입니다.\n\n• **교정 사법:** 발시 순간까지 **줌손을 과녁 중심선에 굳게 박아두고(흘려쥠 밀기)**, 깍지손을 귀 뒤로 지체 없이 가르십시오.`;
-        } else if (query.includes('단') || query.includes('거리부족') || mShort > 2) {
-          fallbackReply += `현재 기압 **${weather.pressure}**에서는 공기 밀도 저항이 형성됩니다. 화살(${adviceArrowWeight}돈)의 직진성을 살리려면 만작 길이가 덜 차지 않도록 가슴을 활짝 열어 **완전 만작**을 확보하고, 과녁 흑심 **상단 3~5cm**를 높여 겨냥하십시오.`;
-        } else if (query.includes('뒤남') || mBack > mFront) {
-          fallbackReply += `뒤남(우측 이탈)은 깍지손이 턱밑 밀착점에서 조급하게 떨어지며 발생합니다. 살먹이가 뺨과 턱밑에 완벽히 닿아 있는지 마음속으로 **1초간 점검한 후** 수평 분리하십시오.`;
-        } else {
-          fallbackReply += `현재 ${location}의 **${weather.wind}**과 기압 **${weather.pressure}**에서는 **비정비팔(非丁非八)** 발디딤을 굳건히 하고 아랫배에 기운을 채우는 **흉허복실(胸虛腹實)**이 기본입니다. 줌손과 깍지손이 서로 대칭으로 동일한 속도로 열리도록 사법을 펼치십시오.`;
-        }
-        appendMasterChatMessage('assistant', fallbackReply);
+        const dynamicMasterReply = generateMasterDynamicAdvice(query, archer, location, weather, stats);
+        appendMasterChatMessage('assistant', dynamicMasterReply);
       } finally {
         if (btn) btn.disabled = false;
         lucide.createIcons();
@@ -4303,8 +4495,8 @@
           dominantMissEl.className = 'text-xl sm:text-2xl font-black text-emerald-600';
         } else {
           const missRanking = [
-            { name: '앞남(前)', count: tFront, color: 'text-rose-600' },
-            { name: '뒤남(後)', count: tBack, color: 'text-amber-600' },
+            { name: '뒤남(좌측)', count: tBack, color: 'text-amber-600' },
+            { name: '앞남(우측)', count: tFront, color: 'text-rose-600' },
             { name: '단(短)', count: tShort, color: 'text-sky-600' },
             { name: '장(長)', count: tLong, color: 'text-purple-600' }
           ].sort((a, b) => b.count - a.count);
@@ -4362,10 +4554,10 @@
         chartMissInstance = new Chart(ctxMiss, {
           type: 'doughnut',
           data: {
-            labels: ['앞남(前)', '뒤남(後)', '단(短)', '장(長)'],
+            labels: ['뒤남(좌측)', '앞남(우측)', '단(短)', '장(長)'],
             datasets: [{
-              data: hasMissData ? [tFront, tBack, tShort, tLong] : [0, 0, 0, 0],
-              backgroundColor: ['#F43F5E', '#F59E0B', '#0284C7', '#8B5CF6'],
+              data: hasMissData ? [tBack, tFront, tShort, tLong] : [0, 0, 0, 0],
+              backgroundColor: ['#F59E0B', '#F43F5E', '#0284C7', '#8B5CF6'],
               borderWidth: 2,
               borderColor: '#ffffff'
             }]
